@@ -6,8 +6,11 @@ public class PlayerController : MonoBehaviour {
     [SerializeField] private int playerselector;
     [SerializeField] private GameObject spawnPoint;
     [SerializeField] private GameObject flashlight;
-    public float speed;
     private bool grounded;
+    public float speed = 6.0F;
+    public float jumpSpeed = 8.0F;
+    public float gravity = 20.0F;
+    private Vector3 moveDirection = Vector3.zero;
 	void Start ()
     {
         grounded = true;
@@ -30,11 +33,22 @@ public class PlayerController : MonoBehaviour {
         playerselector = gamemanager.GetComponent<GameManager>().PlayerSelector;
         if(playerselector == 1)
         {
-            transform.Translate(speed * Input.GetAxis("Horizontal") * Time.deltaTime, 0f, 0f); //движение вправо-влево
-            if (Input.GetKeyDown("space") & grounded == true) //прыжок
-            {
-                GetComponent<Rigidbody>().AddForce(Vector3.up * 5, ForceMode.Impulse);
+//            transform.Translate(speed * Input.GetAxis("Horizontal") * Time.deltaTime, 0f, 0f); //движение вправо-влево
+//            if (Input.GetKeyDown("space") & grounded == true) //прыжок
+//            {
+//                GetComponent<Rigidbody>().AddForce(Vector3.up * 5, ForceMode.Impulse);
+//            }
+            CharacterController controller = GetComponent<CharacterController>();
+            if (controller.isGrounded) {
+                moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, 0);
+                moveDirection = transform.TransformDirection(moveDirection);
+                moveDirection *= speed;
+                if (Input.GetButton("Jump"))
+                    moveDirection.y = jumpSpeed;
+
             }
+            moveDirection.y -= gravity * Time.deltaTime;
+            controller.Move(moveDirection * Time.deltaTime);
 
         }
 	}
