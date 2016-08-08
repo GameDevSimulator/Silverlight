@@ -25,6 +25,7 @@ public class LightBeam : MonoBehaviour
     private float _maxDistance = 20f;
 
     private Vector3[] _vertices;
+    private Vector2[] _uvs;
     private Vector3[] _normals;
     private int[] _tris;
     private List<MeshRay> _meshRays;
@@ -56,18 +57,22 @@ public class LightBeam : MonoBehaviour
         _meshFilter.mesh = mesh;
 
         _vertices = new Vector3[totalVertices];
+        _uvs = new Vector2[totalVertices];
         _normals = new Vector3[totalVertices];
         _meshRays = new List<MeshRay>();
 
         
         for (var i = 0; i < _initialRays; i++)
         {
+            
             var k = 1 - (2 * i/(float)(_initialRays - 1));
             // ray far point
             _vertices[i] = new Vector3(_maxDistance, GetRayY(k, _initialWidth, _spread), 0);
-        
+            _uvs[i] = new Vector2(i / (float)(_initialRays - 1), 1f);
+
             // near point       
             _vertices[_initialRays + i] = new Vector3(0, GetRayY(k, _initialWidth, 0), 0);
+            _uvs[_initialRays + i] = new Vector2(i / (float)(_initialRays - 1), 0f);
 
             _meshRays.Add(new MeshRay
             {
@@ -78,6 +83,7 @@ public class LightBeam : MonoBehaviour
         }
 
         mesh.vertices = _vertices;
+        mesh.uv = _uvs;
         
         for (var i = 0; i < totalVertices; i++)
         {
@@ -107,6 +113,7 @@ public class LightBeam : MonoBehaviour
     void UpdateMesh()
     {
         var vertices = new List<Vector3>(_vertices);
+        var uvs = new List<Vector2>(_uvs);
         //var normals = new List<Vector3>(_normals);
         var tris = new List<int>(_tris);
 
@@ -115,6 +122,7 @@ public class LightBeam : MonoBehaviour
         var mesh = new Mesh();
         mesh.SetVertices(vertices);
         mesh.triangles = tris.ToArray();
+        mesh.uv = uvs.ToArray();
         //mesh.RecalculateBounds();
         //mesh.RecalculateNormals();
         _meshFilter.mesh = mesh;
