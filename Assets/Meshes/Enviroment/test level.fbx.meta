@@ -1,0 +1,303 @@
+fileFormatVersion: 2
+guid: a7cb071d4763e864ab0908323f600771
+timeCreated: 1470425825
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: apple
+    100002: armchear
+    100004: big cup
+    100006: bike
+    100008: bike  wheel 1
+    100010: book 1
+    100012: book 2
+    100014: box
+    100016: bread
+    100018: chear 1
+    100020: coffee table
+    100022: cover
+    100024: door
+    100026: floor
+    100028: floor2
+    100030: food shelf
+    100032: hook
+    100034: hook pale
+    100036: k  wall
+    100038: kastrula
+    100040: miror frame
+    100042: photo freame
+    100044: pil
+    100046: pil2
+    100048: plate
+    100050: plate shelf
+    100052: rope
+    100054: samll roof
+    100056: sink
+    100058: sofa
+    100060: spot
+    100062: spot 2
+    100064: stand
+    100066: stand 2
+    100068: stand 3
+    100070: stand 4
+    100072: steps
+    100074: table
+    100076: //RootNode
+    100078: tile floor
+    100080: tube
+    100082: TV
+    100084: vase
+    100086: wall
+    100088: window
+    100090: window frame
+    100092: "\u0441\u043A\u0430\u0442\u0435\u0440\u0442\u044C"
+    400000: apple
+    400002: armchear
+    400004: big cup
+    400006: bike
+    400008: bike  wheel 1
+    400010: book 1
+    400012: book 2
+    400014: box
+    400016: bread
+    400018: chear 1
+    400020: coffee table
+    400022: cover
+    400024: door
+    400026: floor
+    400028: floor2
+    400030: food shelf
+    400032: hook
+    400034: hook pale
+    400036: k  wall
+    400038: kastrula
+    400040: miror frame
+    400042: photo freame
+    400044: pil
+    400046: pil2
+    400048: plate
+    400050: plate shelf
+    400052: rope
+    400054: samll roof
+    400056: sink
+    400058: sofa
+    400060: spot
+    400062: spot 2
+    400064: stand
+    400066: stand 2
+    400068: stand 3
+    400070: stand 4
+    400072: steps
+    400074: table
+    400076: //RootNode
+    400078: tile floor
+    400080: tube
+    400082: TV
+    400084: vase
+    400086: wall
+    400088: window
+    400090: window frame
+    400092: "\u0441\u043A\u0430\u0442\u0435\u0440\u0442\u044C"
+    2300000: apple
+    2300002: armchear
+    2300004: big cup
+    2300006: bike
+    2300008: bike  wheel 1
+    2300010: book 1
+    2300012: book 2
+    2300014: box
+    2300016: bread
+    2300018: chear 1
+    2300020: coffee table
+    2300022: cover
+    2300024: door
+    2300026: floor
+    2300028: floor2
+    2300030: food shelf
+    2300032: hook
+    2300034: hook pale
+    2300036: k  wall
+    2300038: kastrula
+    2300040: miror frame
+    2300042: photo freame
+    2300044: pil
+    2300046: pil2
+    2300048: plate
+    2300050: plate shelf
+    2300052: rope
+    2300054: samll roof
+    2300056: sink
+    2300058: sofa
+    2300060: spot
+    2300062: spot 2
+    2300064: stand
+    2300066: stand 2
+    2300068: stand 3
+    2300070: stand 4
+    2300072: steps
+    2300074: table
+    2300076: tile floor
+    2300078: tube
+    2300080: TV
+    2300082: vase
+    2300084: wall
+    2300086: window
+    2300088: window frame
+    2300090: "\u0441\u043A\u0430\u0442\u0435\u0440\u0442\u044C"
+    3300000: apple
+    3300002: armchear
+    3300004: big cup
+    3300006: bike
+    3300008: bike  wheel 1
+    3300010: book 1
+    3300012: book 2
+    3300014: box
+    3300016: bread
+    3300018: chear 1
+    3300020: coffee table
+    3300022: cover
+    3300024: door
+    3300026: floor
+    3300028: floor2
+    3300030: food shelf
+    3300032: hook
+    3300034: hook pale
+    3300036: k  wall
+    3300038: kastrula
+    3300040: miror frame
+    3300042: photo freame
+    3300044: pil
+    3300046: pil2
+    3300048: plate
+    3300050: plate shelf
+    3300052: rope
+    3300054: samll roof
+    3300056: sink
+    3300058: sofa
+    3300060: spot
+    3300062: spot 2
+    3300064: stand
+    3300066: stand 2
+    3300068: stand 3
+    3300070: stand 4
+    3300072: steps
+    3300074: table
+    3300076: tile floor
+    3300078: tube
+    3300080: TV
+    3300082: vase
+    3300084: wall
+    3300086: window
+    3300088: window frame
+    3300090: "\u0441\u043A\u0430\u0442\u0435\u0440\u0442\u044C"
+    4300000: steps
+    4300002: armchear
+    4300004: TV
+    4300006: stand 4
+    4300008: door
+    4300010: floor
+    4300012: tile floor
+    4300014: vase
+    4300016: coffee table
+    4300018: box
+    4300020: plate shelf
+    4300022: bread
+    4300024: apple
+    4300026: plate
+    4300028: spot
+    4300030: stand 3
+    4300032: kastrula
+    4300034: tube
+    4300036: book 1
+    4300038: book 2
+    4300040: k  wall
+    4300042: photo freame
+    4300044: spot 2
+    4300046: samll roof
+    4300048: bike
+    4300050: bike  wheel 1
+    4300052: hook
+    4300054: hook pale
+    4300056: food shelf
+    4300058: window frame
+    4300060: window
+    4300062: miror frame
+    4300064: big cup
+    4300066: pil
+    4300068: pil2
+    4300070: sofa
+    4300072: floor2
+    4300074: rope
+    4300076: wall
+    4300078: chear 1
+    4300080: table
+    4300082: cover
+    4300084: "\u0441\u043A\u0430\u0442\u0435\u0440\u0442\u044C"
+    4300086: stand 2
+    4300088: sink
+    4300090: stand
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 1
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
