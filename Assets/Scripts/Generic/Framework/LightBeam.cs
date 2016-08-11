@@ -83,7 +83,7 @@ public class LightBeam : MonoBehaviour
         }
 
         mesh.vertices = _vertices;
-        mesh.uv = _uvs;
+        //mesh.uv = _uvs;
         
         for (var i = 0; i < totalVertices; i++)
         {
@@ -122,7 +122,7 @@ public class LightBeam : MonoBehaviour
         var mesh = new Mesh();
         mesh.SetVertices(vertices);
         mesh.triangles = tris.ToArray();
-        mesh.uv = uvs.ToArray();
+        //mesh.uv = uvs.ToArray();
         //mesh.RecalculateBounds();
         //mesh.RecalculateNormals();
         _meshFilter.mesh = mesh;

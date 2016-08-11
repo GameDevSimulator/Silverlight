@@ -8,6 +8,8 @@
 		_RimColor("Rim Color", Color) = (0.26,0.19,0.16,0.0)
 		_RimPower("Rim Power", Range(0.5,8.0)) = 3.0
 		_PulsePower("Pulse Power", Range(0.0,1.0)) = 0.1
+		_SrcBlend("Src Blend", Int) = 0
+		_DstBlend("Dst Blend", Int) = 0
 	}
 	SubShader{
 		Tags{ "RenderType" = "TransparentCutout" }
@@ -16,6 +18,7 @@
 		//ZWrite Off
 		//ColorMask RGB
 		Cull Off
+		Blend[_SrcBlend][_DstBlend]
 
 		CGPROGRAM
 	#pragma surface surf Lambert vertex:vert
