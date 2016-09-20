@@ -31,12 +31,5 @@ public class FlashLight : MonoBehaviour
             transform.localPosition += q * Vector3.right * Radius;
             transform.rotation = q;
         }
-        
-        
-        /*
-        var v = new Vector3(Radius, 0, 0);
-        transform.position = _initialPoint + 
-        gameObject.transform.RotateAround(_initialPoint, Vector3.forward, 0.1f);
-        */
     }
 }

@@ -26,13 +26,12 @@ public class PlayerController : MonoBehaviour
                 //FlashlightObject.SetActive(!FlashlightObject.gameObject.activeSelf);
             }
 
-            if (Input.GetButton("Jump"))
+            if (Input.GetButtonDown("Jump"))
             {
                 _controller.Jump();
             }
-
-            var moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, 0);
-            _controller.Move(moveDirection);
+            
+            _controller.Move(Input.GetAxis("Horizontal"));
         }
     }
 

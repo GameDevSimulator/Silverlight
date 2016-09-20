@@ -145,7 +145,7 @@ public class LightBeam : MonoBehaviour
                 while (hit.collider != null && hit.collider.CompareTag(Tags.Darkness))
                 {
                     var dkn = hit.collider.gameObject.GetComponent<Darkness>();
-                    if (dkn != null)
+                    if (dkn != null && (hit.point - transform.position).magnitude < _maxDistance)
                     {
                         dkn.OnLight();
 
@@ -156,7 +156,7 @@ public class LightBeam : MonoBehaviour
                                 hit.point + rdir * 0.001f, 
                                 rdir, 
                                 out hit2,
-                                _maxDistance - hit.distance);
+                                _maxDistance - (hit.point - transform.position).magnitude);
 
                             if (result)
                             {
