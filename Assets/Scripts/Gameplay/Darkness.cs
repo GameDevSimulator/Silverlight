@@ -29,9 +29,10 @@ public class Darkness : MonoBehaviour
 
     [Range(0.0f, 1.0f)]
     public float ColliderEnableAt = 0.9f;
-
+    
     public AnimationCurve AppearCurve = AnimationCurve.Linear(0, 0, 1f, 1f);
     public AnimationCurve DissolveCurve = AnimationCurve.Linear(0, 0, 1f, 1f);
+    public AnimationCurve DistToPlayerAppear = AnimationCurve.Linear(0, 0, 10f, 1f);
 
     void Start ()
 	{
@@ -62,7 +63,8 @@ public class Darkness : MonoBehaviour
 
         if (!_isLighted && _state < 1f)
         {
-            _state += Time.deltaTime / AppearTime;
+            var distToPlayer = (GameManager.Instance.Player.transform.position - transform.position).magnitude;
+            _state += Time.deltaTime * (1f/ AppearTime) * DistToPlayerAppear.Evaluate(distToPlayer);
 
             if (!_isColliderActive && _state > ColliderEnableAt)
                 EnableCollider();

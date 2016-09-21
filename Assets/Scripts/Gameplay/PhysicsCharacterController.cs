@@ -21,7 +21,11 @@ public class PhysicsCharacterController : MonoBehaviour
 
     public bool IsGrounded { get; private set; }
 
-	void Start ()
+#if DEBUG
+    public bool ShowDebugInfo = false;
+#endif
+
+    void Start ()
 	{
 	    _rigidBody = GetComponent<Rigidbody>();
     }
@@ -95,9 +99,12 @@ public class PhysicsCharacterController : MonoBehaviour
 #if DEBUG
     void OnGUI()
     {
-        GUI.TextField(new Rect(0, 0, 200, 20), string.Format("input: {0}", Input.GetAxis("Horizontal")));
-        GUI.TextField(new Rect(0, 25, 200, 20), string.Format("velocity: {0}", _rigidBody.velocity.ToString()));
-        GUI.TextField(new Rect(0, 50, 200, 20), string.Format("velocity: {0}", _rigidBody.velocity.magnitude));
+        if (ShowDebugInfo)
+        {
+            GUI.TextField(new Rect(0, 0, 200, 20), string.Format("input: {0}", Input.GetAxis("Horizontal")));
+            GUI.TextField(new Rect(0, 25, 200, 20), string.Format("velocity: {0}", _rigidBody.velocity.ToString()));
+            GUI.TextField(new Rect(0, 50, 200, 20), string.Format("velocity: {0}", _rigidBody.velocity.magnitude));
+        }
     }
 #endif
 }

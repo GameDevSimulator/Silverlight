@@ -26,7 +26,8 @@
 		Blend[_SrcBlend][_DstBlend]
 
 		CGPROGRAM
-	#pragma surface surf Lambert vertex:vert addshadow
+	
+#pragma surface surf Lambert vertex:vert addshadow	
 		struct Input {
 			float2 uv_MainTex;
 			float2 uv_BumpMap;
@@ -44,6 +45,14 @@
 		float _DissolveEdge;
 		float _PulsePower;
 		float _RandomValue;
+
+		fixed4 LightingNoLighting(SurfaceOutput s, fixed3 lightDir, fixed atten)
+		{
+			fixed4 c;
+			c.rgb = s.Albedo * 0.1;
+			c.a = s.Alpha;
+			return c;
+		}
 		
 		float gauss(float x, float spread)
 		{
@@ -51,7 +60,9 @@
 		}
 
 		void vert(inout appdata_full v) {
-			v.vertex.xyz += v.normal * sin(_Time.z + v.vertex.y) * _PulsePower + _PulsePower * 0.5;			
+			//v.vertex.xyz += v.normal * sin(_Time.z + v.vertex.y + _RandomValue * 10.0) * _PulsePower + _PulsePower * 0.5;
+			v.vertex.xyz += v.normal * sin(_Time.z + v.vertex.y + _RandomValue * 10.0) * _DissolveValue * _PulsePower 
+				+ v.normal * sin(_Time.z + v.vertex.y + _RandomValue * 10.0) * _DissolveValue * _PulsePower;
 		}
 
 		void surf(Input IN, inout SurfaceOutput o) {
@@ -65,6 +76,7 @@
 
 			float2 screenUV = IN.screenPos.xy / IN.screenPos.w;			
 			o.Albedo = tex2D(_MainTex, screenUV * 4.0 * float2(1.0 + _SinTime.y * 0.5 , 1.0 +  _CosTime.y * 0.5)).rgb;
+			o.Albedo *= 0.4;
 			o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_BumpMap));		
 
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));
