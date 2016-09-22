@@ -166,6 +166,12 @@ public class LightBeam : MonoBehaviour
                         }
                     }
 
+                    var dknVolume = hit.collider.gameObject.GetComponent<DarknessVolume>();
+                    if (dknVolume != null && (hit.point - transform.position).magnitude < _maxDistance)
+                    {
+                        dknVolume.OnBeamRayHit(hit);
+                    }
+
                     break;
                 }
                     
