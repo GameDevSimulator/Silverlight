@@ -5,7 +5,7 @@
     <ignored path=".consulo/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <file path="/PlayerController.cs" changelist="88e1fee6-10ab-4493-8a26-65073755cd0a" time="1470145498192" ignored="false" />
-    <file path="/GameManager.cs" changelist="88e1fee6-10ab-4493-8a26-65073755cd0a" time="1468965242970" ignored="false" />
+    <file path="/GameManager.cs" changelist="88e1fee6-10ab-4493-8a26-65073755cd0a" time="1474799637460" ignored="false" />
     <file path="/CatController.cs" changelist="88e1fee6-10ab-4493-8a26-65073755cd0a" time="1468954637416" ignored="false" />
     <file path="/SceneFadeInOut.cs" changelist="88e1fee6-10ab-4493-8a26-65073755cd0a" time="1468956891927" ignored="false" />
     <file path="/CameraController.cs" changelist="88e1fee6-10ab-4493-8a26-65073755cd0a" time="1468958772805" ignored="false" />
@@ -65,7 +65,7 @@
         <entry file="file://$PROJECT_DIR$/Assets/Scripts/Gameplay/GameManager.cs">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.67873305">
-              <caret line="40" column="33" selection-start-line="40" selection-start-column="33" selection-end-line="40" selection-end-column="33" />
+              <caret line="40" column="36" selection-start-line="40" selection-start-column="36" selection-end-line="40" selection-end-column="36" />
               <folding>
                 <element signature="e#0#44#0" expanded="true" />
               </folding>
@@ -294,15 +294,15 @@
       <workItem from="1468923358712" duration="28006000" />
       <workItem from="1469990668834" duration="1265000" />
       <workItem from="1470143623003" duration="2941000" />
-      <workItem from="1474798049943" duration="1238000" />
+      <workItem from="1474798049943" duration="1581000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="33450000" />
+    <option name="totallyTimeSpent" value="33793000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1680" height="1020" extended-state="7" />
+    <frame x="0" y="0" width="1680" height="1020" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Problems" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -424,7 +424,7 @@
     <entry file="file://$PROJECT_DIR$/Assets/Scripts/Gameplay/GameManager.cs">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.67873305">
-          <caret line="40" column="33" selection-start-line="40" selection-start-column="33" selection-end-line="40" selection-end-column="33" />
+          <caret line="40" column="36" selection-start-line="40" selection-start-column="36" selection-end-line="40" selection-end-column="36" />
           <folding>
             <element signature="e#0#44#0" expanded="true" />
           </folding>

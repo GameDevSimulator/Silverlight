@@ -38,7 +38,7 @@ public class GameManager : Singleton<GameManager>
 
     void Update()
     {
-        if (Input.GetKeyDown("f"))
+        if (Input.GetKeyDown("f"))//
         {
             SwitchCharacter();
             Debug.Log(string.Format("Character switched to {0}", CurrentControllableCharacter));
