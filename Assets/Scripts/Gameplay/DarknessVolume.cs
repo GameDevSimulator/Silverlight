@@ -35,6 +35,7 @@ public class DarknessVolume : MonoBehaviour
 	    {
 	        volumePoint.State = Random.value;
 	    }
+
 	}
 
     public void OnBeamRayHit(RaycastHit hit)
@@ -54,26 +55,9 @@ public class DarknessVolume : MonoBehaviour
         if (_meshCollider == null)
             _meshCollider = GetComponent<MeshCollider>();
 
-        /*
-        var mesh = new Mesh();
-        mesh.vertices = new Vector3[3];
-        mesh.vertices[0] = _points[0];
-        mesh.vertices[1] = _points[1];
-        mesh.vertices[2] = _points[2];
+       
 
-        // ИНДЕКСЫ ВЕРШИН
-        // 1 треугольник - 3 вершины, поэтому размер trinagles = размер vertices * 3
-        mesh.triangles = new int[6];
-        mesh.triangles[0] = 0; // индекс (номер) вершины
-        mesh.triangles[1] = 1;
-        mesh.triangles[2] = 2;
-
-        mesh.triangles[3] = 2; // индекс (номер) вершины
-        mesh.triangles[4] = 1;
-        mesh.triangles[5] = 0;
-        */
-
-        var mesh = CreateMesh(10f, 10f);
+       var mesh = CreateMesh(10f, 10f);
 
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
@@ -94,15 +78,15 @@ public class DarknessVolume : MonoBehaviour
         var x = 0f;
         while (x < Size.x)
         {
-            var y = 0f;
+            var y =0f;
             while (y < Size.y)
             {
-                var z = 0f;
+                var z = Size.z / 4f;
                 while (z < Size.z)
                 {
                     var pos = new Vector3(x, y, z) - Size / 2f;
                     _points.Add(new VolumePoint() { Position = pos });
-                    z += Density;
+                    z += Size.z/2f;
                 }
 
                 y += Density;
@@ -128,8 +112,7 @@ public class DarknessVolume : MonoBehaviour
 
         foreach (var point in _points)
         {
-            Gizmos.color = new Color(point.State, point.State, point.State);
-            //Gizmos.DrawSphere(transform.position + point.Position, 0.1f);
+            Gizmos.color = new Color(0.5f, 0.2f, 0);           
             Gizmos.DrawWireSphere(transform.position + point.Position, 0.1f);
         }
 
@@ -141,16 +124,120 @@ public class DarknessVolume : MonoBehaviour
 
     Mesh CreateMesh(float width, float height)
     {
+
         Mesh m = new Mesh();
         m.name = "ScriptedMesh";
-        m.vertices = new Vector3[] {
-             new Vector3(-width, -height, 0.01f),
-             new Vector3(width, -height, 0.01f),
-             new Vector3(width, height, 0.01f),
-             new Vector3(-width, height, 0.01f)
-         };
-        
-        m.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
+        var tmpVertices = new Vector3[_points.Count];
+        for (int i = 0; i < _points.Count; i++)
+        {
+
+            tmpVertices[i] = _points[i].Position;
+        }
+        m.vertices = tmpVertices;
+        int nx = (int)(Size.x / Density) + 1;
+        int ny = (int)(Size.y / Density) + 1;
+
+        int tempTrianglesCount = 4 * (nx + ny + (nx - 1) * (ny - 1) - 2);
+        var tmpTriangles = new int[tempTrianglesCount * 3];
+        int triCount = 0;
+        int triCountL = 6 * (ny - 1) + 12 * (nx - 1);
+        int counter = 0;
+          while (counter < ny-1)
+             {
+                 //левая сторона
+                 tmpTriangles[counter * 6] = 2*counter;
+                 tmpTriangles[counter * 6+ 1] = 2*counter + 1;
+                 tmpTriangles[counter * 6 + 2] = 2*counter + 2;
+                 tmpTriangles[counter * 6 + 3] = 2*counter + 1;
+                 tmpTriangles[counter * 6 + 4] = 2*counter + 3;
+                 tmpTriangles[counter * 6 + 5] = 2*counter + 2;
+                 //правая сторона
+                 tmpTriangles[triCountL+counter * 6] = 2*ny * (nx-1) + 2*counter;
+                 tmpTriangles[triCountL + counter * 6 + 1] = 2 * ny * (nx - 1) + 2*counter + 2;
+                 tmpTriangles[triCountL + counter * 6 + 2] = 2 * ny * (nx - 1) + 2*counter + 1;
+                 tmpTriangles[triCountL + counter * 6 + 3] = 2 * ny * (nx - 1) + 2*counter + 1;
+                 tmpTriangles[triCountL + counter * 6 + 4] = 2 * ny * (nx - 1) + 2*counter + 2;
+                 tmpTriangles[triCountL + counter * 6 + 5] = 2 * ny * (nx - 1) + 2*counter + 3;
+
+                 counter += 1;
+                 triCount += 6;
+             }
+
+             counter = 0;
+             triCountL = triCount+6*(nx-1);
+
+             while (counter < nx - 1)
+             {
+                 if (counter == 0)
+                 {
+                     //нижняя сторона
+                     tmpTriangles[triCount + counter * 6] = 0;
+                     tmpTriangles[triCount + counter * 6 + 2] = 1;
+                     //верхняя сторона
+                     tmpTriangles[triCountL + counter * 6] = ny*2-2;
+                     tmpTriangles[triCountL + counter * 6 + 1] = ny * 2 - 1;
+
+                 }
+                 else
+                 {
+                     //нижняя сторона
+                     tmpTriangles[triCount + counter * 6] = tmpTriangles[triCount + counter * 6 - 2];
+                     tmpTriangles[triCount + counter * 6 + 2] = tmpTriangles[triCount + counter * 6 - 1];
+                     //верхняя сторона
+                     tmpTriangles[triCountL + counter * 6] = tmpTriangles[triCountL + counter * 6 - 1];
+                     tmpTriangles[triCountL + counter * 6 + 1] = tmpTriangles[triCountL + counter * 6 - 2];
+                 }
+                 //нижняя сторона
+                 tmpTriangles[triCount + counter * 6 + 1] = tmpTriangles[triCount + counter * 6] + ny * 2;
+                 tmpTriangles[triCount + counter * 6 + 3] = tmpTriangles[triCount + counter * 6 + 2];
+                 tmpTriangles[triCount + counter * 6 + 4] = tmpTriangles[triCount + counter * 6 + 1];
+                 tmpTriangles[triCount + counter * 6 + 5] = tmpTriangles[triCount + counter * 6 + 4] + 1;
+                 //верхняя сторона
+                 tmpTriangles[triCountL + counter * 6 + 2] = tmpTriangles[triCountL + counter * 6] + ny * 2;
+                 tmpTriangles[triCountL + counter * 6 + 3] = tmpTriangles[triCountL + counter * 6 + 1];
+                 tmpTriangles[triCountL + counter * 6 + 4] = tmpTriangles[triCountL + counter * 6 + 1]+ny*2;
+                 tmpTriangles[triCountL + counter * 6 + 5] = tmpTriangles[triCountL + counter * 6 + 4] - 1;
+                 counter += 1;
+
+             }
+             triCount = 12 * (ny - 1) + 12 * (nx - 1);
+        counter = 0;
+        //лицевая сторона
+        while (counter < nx - 1)
+        {
+            int counter2 = 0;
+            while (counter2 < ny - 1)
+            {
+                tmpTriangles[triCount+6 * counter*(ny-1)+counter2 * 6] = 2 * counter * ny +2 * counter2 + ny * 2;
+                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 1] = 2 * counter * ny + 2 * counter2;
+                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 2] = 2 * counter * ny + 2 * counter2 + ny * 2 + 2;
+                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 3] = 2 * counter * ny + 2 * counter2;
+                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 4] = 2 * counter * ny + 2 * counter2 + 2;
+                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 5] = 2 * counter * ny + 2 * counter2 + ny * 2 + 2;
+                counter2++;
+            }
+            counter++;
+        }
+        triCount += 6*(ny-1)*(nx-1);
+        counter = 0;
+        //задняя сторона
+        while (counter < nx - 1)
+        {
+            int counter2 = 0;
+            while (counter2 < ny - 1)
+            {
+                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6] = 2 * counter * ny + 2 * counter2 + ny * 2+1;
+                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 1] = 2 * counter * ny + 2 * counter2 + ny * 2 + 3;
+                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 2] = 2 * counter * ny + 2 * counter2+1;
+                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 3] = 2 * counter * ny + 2 * counter2+1;
+                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 4] = 2 * counter * ny + 2 * counter2 + ny * 2 + 3;
+                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 5] = 2 * counter * ny + 2 * counter2 + 3; 
+                counter2++;
+            }
+            counter++;
+        }
+        m.triangles = tmpTriangles;
+        // m.triangles = new int[] { 48,49,50,49,51,50};
         m.RecalculateNormals();
 
         return m;
