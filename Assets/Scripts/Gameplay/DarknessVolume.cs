@@ -13,6 +13,15 @@ public class DarknessVolume : MonoBehaviour
     public float DisappearTime;
     public bool DrawDebugMesh;
 
+    [Range(0f, 1f)]
+    public float ActiveColliderThreshold;
+
+    [Range(0f, 1f)]
+    public float Splash = 0.1f;
+
+    [Range(0.1f, 2f)]
+    public float NeighboursModifier = 1f;
+
     public class VolumePoint
     {
         public bool IsActive { get { return State > 0.2f; } }
@@ -48,9 +57,10 @@ public class DarknessVolume : MonoBehaviour
 
     private MeshCollider _meshCollider;
     private Mesh _debugMesh;
-    private List<VolumePoint> _points = new List<VolumePoint>();
-    private List<Face> _faces = new List<Face>();
-    private List<Face> _frontier = new List<Face>();
+    private readonly List<Vector3> _verticies = new List<Vector3>();
+    private readonly List<Face> _faces = new List<Face>();
+    private readonly List<Face> _frontier = new List<Face>();
+    private readonly List<float> _states = new List<float>();
     private int _xCount;
     private int _yCount;
     private bool _rebuildRequired = false;
@@ -63,20 +73,37 @@ public class DarknessVolume : MonoBehaviour
 	}
 	
 	void Update ()
+	{
+    }
+
+    void FixedUpdate()
     {
-        foreach (var p in _points)
-	    {
-	        if (p.State < 1f)
-	        {
-	            p.State += AppearTime*Time.deltaTime;
-	            
-                if(p.State > 1f)
-	            {
-	                p.State = 1f;
-	                _rebuildRequired = true;
-	            }
-	        }
-	    }
+        for (var xi = 0; xi < _xCount; xi++)
+        {
+            for (var yi = 0; yi < _yCount; yi++)
+            {
+                if (IsActivePoint(xi, yi))
+                    continue;
+
+                var activeNeighbors = 0;
+
+                if (IsActivePoint(xi + 1, yi)) activeNeighbors++;
+                if (IsActivePoint(xi - 1, yi)) activeNeighbors++;
+                if (IsActivePoint(xi, yi + 1)) activeNeighbors++;
+                if (IsActivePoint(xi, yi - 1)) activeNeighbors++;
+                if (IsActivePoint(xi + 1, yi + 1)) activeNeighbors++;
+                if (IsActivePoint(xi + 1, yi - 1)) activeNeighbors++;
+                if (IsActivePoint(xi - 1, yi + 1)) activeNeighbors++;
+                if (IsActivePoint(xi - 1, yi - 1)) activeNeighbors++;
+
+                if (activeNeighbors > 2)
+                {
+                    _states[PointToIndex(xi, yi)] += AppearTime * Time.deltaTime * activeNeighbors * NeighboursModifier;
+                    if (IsActivePoint(xi, yi))
+                        _rebuildRequired = true;
+                }
+            }
+        }
 
         if (_rebuildRequired)
         {
@@ -86,96 +113,34 @@ public class DarknessVolume : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
-    {
-        
-    }
-
     public void OnBeamRayHit(RaycastHit hit)
     {
-        // USEFUL:
-        // hit.point 
-        // hit.triangleIndex
-        // hit.barycentricCoordinate ??? google
-
-        /*
-        // DRAW HIT TRIANGLE
-        Mesh mesh = _meshCollider.sharedMesh;
-        Vector3[] vertices = mesh.vertices;
-        int[] triangles = mesh.triangles;
-        Vector3 p0 = vertices[triangles[hit.triangleIndex * 3 + 0]];
-        Vector3 p1 = vertices[triangles[hit.triangleIndex * 3 + 1]];
-        Vector3 p2 = vertices[triangles[hit.triangleIndex * 3 + 2]];
-        Transform hitTransform = hit.collider.transform;
-        p0 = hitTransform.TransformPoint(p0);
-        p1 = hitTransform.TransformPoint(p1);
-        p2 = hitTransform.TransformPoint(p2);
-        Debug.DrawLine(p0, p1);
-        Debug.DrawLine(p1, p2);
-        Debug.DrawLine(p2, p0);
-        */
-
-        // Debug.Log("HIT!!");
-
         var mesh = _meshCollider.sharedMesh;
         var triangles = mesh.triangles;
-        var p0 = _points[triangles[hit.triangleIndex * 3 + 0]];
-        var p1 = _points[triangles[hit.triangleIndex * 3 + 1]];
-        var p2 = _points[triangles[hit.triangleIndex * 3 + 2]];
+        var i1 = triangles[hit.triangleIndex * 3 + 0] / 2;
+        var i2 = triangles[hit.triangleIndex * 3 + 1] / 2;
+        var i3 = triangles[hit.triangleIndex * 3 + 2] / 2;
 
-        if (p0.IsActive)
-        {
-            p0.State -= DisappearTime*Time.deltaTime;
-            if (!p0.IsActive)
-            {
-                _rebuildRequired = true;
-            }
-        }
+        var x1 = 0;
+        var y1 = 0;
+        CoordFromIndex(i1, out x1, out y1);
+        Decrease(i1);
+        Decrease(i2);
+        Decrease(i3);
 
-        if (p1.IsActive)
-        {
-            p1.State -= DisappearTime * Time.deltaTime;
-            if (!p1.IsActive)
-            {
-                _rebuildRequired = true;
-            }
-        }
-
-        if (p2.IsActive)
-        {
-            p2.State -= DisappearTime * Time.deltaTime;
-            if (!p2.IsActive)
-            {
-                _rebuildRequired = true;
-            }
-        }
+        Decrease(x1, y1 - 1, Splash);
+        Decrease(x1, y1 + 1, Splash);
+        Decrease(x1 - 1, y1, Splash);
+        Decrease(x1 + 1, y1, Splash);
     }
 
-    [ContextMenu("CreateTrianlges")]
-    void CreateTrianlges()
-    {
-        if (_meshCollider == null)
-            _meshCollider = GetComponent<MeshCollider>();
-
-       
-
-       var mesh = CreateMesh(10f, 10f);
-
-        //mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
-
-        // обновить коллайдер
-        _meshCollider.sharedMesh = null;
-        _meshCollider.sharedMesh = mesh;
-
-        _debugMesh = mesh;
-    }
+    
 
     [ContextMenu("Init")]
     void Init()
     {
-        _points.Clear();
-        _frontier.Clear();
+        _verticies.Clear();
+        _states.Clear();
 
         var count = Size * Density;
         _yCount = (int) Mathf.Round(count.y) + 1;
@@ -189,12 +154,12 @@ public class DarknessVolume : MonoBehaviour
                 var x = xi * (1f / Density);
                 var y = yi * (1f / Density);
 
-                var p1 = new VolumePoint(new Vector3(x, y, 0f) - Size/2f);
-                _points.Add(p1);
+                _verticies.Add(new Vector3(x, y, 0f) - Size / 2f);
+                _states.Add(1f);
                 idx++;
-
-                var p2 = new VolumePoint(new Vector3(x, y, Size.z) - Size / 2f);
-                _points.Add(p2);
+                
+                _verticies.Add(new Vector3(x, y, Size.z) - Size / 2f);
+                _states.Add(1f);
                 idx++;
 
                 if (x > 0)
@@ -275,12 +240,7 @@ public class DarknessVolume : MonoBehaviour
 
         foreach (var face in _faces)
         {
-            var p1 = _points[face.Point1];
-            var p1B = _points[face.Point1Back];
-            var p2 = _points[face.Point2];
-            var p2B = _points[face.Point2Back];
-
-            if(!p1.IsActive || !p2.IsActive)
+            if(!IsActivePoint(face.X1, face.Y1) || !IsActivePoint(face.X2, face.Y2))
                 continue;
 
             if(face.Rotation == 0)
@@ -363,7 +323,7 @@ public class DarknessVolume : MonoBehaviour
     {
         var mesh = new Mesh();
         mesh.name = "ScriptedMesh2";
-        mesh.vertices = _points.Select(p => p.Position).ToArray();
+        mesh.vertices = _verticies.ToArray();
 
         var faceTriangles = new int[_faces.Count * 3 * 2];
         var faceIdx = 0;
@@ -403,32 +363,49 @@ public class DarknessVolume : MonoBehaviour
         _meshCollider.sharedMesh = mesh;
         _debugMesh = mesh;
     }
-
-    private VolumePoint PointByCoord(int x, int y, int z = 0)
-    {
-        if (y >= _yCount || y < 0)
-            return null;
-
-        if (x >= _xCount || x < 0)
-            return null;
-
-        return _points[(x * _yCount + y) * 2 + z];
-    }
-
+    
     private void CoordFromIndex(int index, out int x, out int y)
     {
-        x = (index / 2) / _yCount;
-        y = (index / 2) % _xCount;
+        x = index / _yCount;
+        y = index % _xCount;
     }
 
-    private bool IsActivePoint(int x, int y, int z = 0)
+    private int PointToIndex(int x, int y)
     {
-        var p = PointByCoord(x, y, z);
+        return x * _yCount + y;
+    }
 
-        if (p == null)
+    private bool IsActivePoint(int x, int y)
+    {
+        if (x < 0 || x >= _xCount)
             return false;
+        if (y < 0 || y >= _yCount)
+            return false;
+        return _states[PointToIndex(x,y)] > ActiveColliderThreshold;
+    }
 
-        return p.IsActive;
+    private bool IsActivePoint(int index)
+    {
+        return _states[index] > ActiveColliderThreshold;
+    }
+
+    private void Decrease(int index, float modifier = 1f)
+    {
+        if (IsActivePoint(index))
+        {
+            _states[index] -= DisappearTime * Time.deltaTime * modifier;
+            if (!IsActivePoint(index))
+                _rebuildRequired = true;
+        }
+    }
+
+    private void Decrease(int x, int y, float modifier = 1f)
+    {
+        if (x < 0 || x >= _xCount)
+            return;
+        if (y < 0 || y >= _yCount)
+            return;
+        Decrease(PointToIndex(x, y));
     }
 
     void OnDrawGizmos()
@@ -436,136 +413,10 @@ public class DarknessVolume : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube(transform.position, Size);
 
-        foreach (var point in _points)
-        {
-            Gizmos.color = new Color(point.State, point.State, point.State);           
-            Gizmos.DrawWireSphere(transform.position + point.Position, 0.01f);
-        }
-
         if (_debugMesh != null && DrawDebugMesh)
         {
             Gizmos.color = Color.cyan;
             Gizmos.DrawWireMesh(_debugMesh, transform.position);
         }
-    }
-
-    Mesh CreateMesh(float width, float height)
-    {
-
-        Mesh m = new Mesh();
-        m.name = "ScriptedMesh";
-        var tmpVertices = new Vector3[_points.Count];
-        for (int i = 0; i < _points.Count; i++)
-        {
-            tmpVertices[i] = _points[i].Position;
-        }
-        m.vertices = tmpVertices;
-        int nx = (int)(Size.x / Density) + 1;
-        int ny = (int)(Size.y / Density) + 1;
-
-        int tempTrianglesCount = 4 * (nx + ny + (nx - 1) * (ny - 1) - 2);
-        var tmpTriangles = new int[tempTrianglesCount * 3];
-        int triCount = 0;
-        int triCountL = 6 * (ny - 1) + 12 * (nx - 1);
-        int counter = 0;
-          while (counter < ny-1)
-             {
-                 //левая сторона
-                 tmpTriangles[counter * 6] = 2*counter;
-                 tmpTriangles[counter * 6+ 1] = 2*counter + 1;
-                 tmpTriangles[counter * 6 + 2] = 2*counter + 2;
-                 tmpTriangles[counter * 6 + 3] = 2*counter + 1;
-                 tmpTriangles[counter * 6 + 4] = 2*counter + 3;
-                 tmpTriangles[counter * 6 + 5] = 2*counter + 2;
-                 //правая сторона
-                 tmpTriangles[triCountL+counter * 6] = 2*ny * (nx-1) + 2*counter;
-                 tmpTriangles[triCountL + counter * 6 + 1] = 2 * ny * (nx - 1) + 2*counter + 2;
-                 tmpTriangles[triCountL + counter * 6 + 2] = 2 * ny * (nx - 1) + 2*counter + 1;
-                 tmpTriangles[triCountL + counter * 6 + 3] = 2 * ny * (nx - 1) + 2*counter + 1;
-                 tmpTriangles[triCountL + counter * 6 + 4] = 2 * ny * (nx - 1) + 2*counter + 2;
-                 tmpTriangles[triCountL + counter * 6 + 5] = 2 * ny * (nx - 1) + 2*counter + 3;
-
-                 counter += 1;
-                 triCount += 6;
-             }
-
-             counter = 0;
-             triCountL = triCount+6*(nx-1);
-
-             while (counter < nx - 1)
-             {
-                 if (counter == 0)
-                 {
-                     //нижняя сторона
-                     tmpTriangles[triCount + counter * 6] = 0;
-                     tmpTriangles[triCount + counter * 6 + 2] = 1;
-                     //верхняя сторона
-                     tmpTriangles[triCountL + counter * 6] = ny*2-2;
-                     tmpTriangles[triCountL + counter * 6 + 1] = ny * 2 - 1;
-
-                 }
-                 else
-                 {
-                     //нижняя сторона
-                     tmpTriangles[triCount + counter * 6] = tmpTriangles[triCount + counter * 6 - 2];
-                     tmpTriangles[triCount + counter * 6 + 2] = tmpTriangles[triCount + counter * 6 - 1];
-                     //верхняя сторона
-                     tmpTriangles[triCountL + counter * 6] = tmpTriangles[triCountL + counter * 6 - 1];
-                     tmpTriangles[triCountL + counter * 6 + 1] = tmpTriangles[triCountL + counter * 6 - 2];
-                 }
-                 //нижняя сторона
-                 tmpTriangles[triCount + counter * 6 + 1] = tmpTriangles[triCount + counter * 6] + ny * 2;
-                 tmpTriangles[triCount + counter * 6 + 3] = tmpTriangles[triCount + counter * 6 + 2];
-                 tmpTriangles[triCount + counter * 6 + 4] = tmpTriangles[triCount + counter * 6 + 1];
-                 tmpTriangles[triCount + counter * 6 + 5] = tmpTriangles[triCount + counter * 6 + 4] + 1;
-                 //верхняя сторона
-                 tmpTriangles[triCountL + counter * 6 + 2] = tmpTriangles[triCountL + counter * 6] + ny * 2;
-                 tmpTriangles[triCountL + counter * 6 + 3] = tmpTriangles[triCountL + counter * 6 + 1];
-                 tmpTriangles[triCountL + counter * 6 + 4] = tmpTriangles[triCountL + counter * 6 + 1]+ny*2;
-                 tmpTriangles[triCountL + counter * 6 + 5] = tmpTriangles[triCountL + counter * 6 + 4] - 1;
-                 counter += 1;
-
-             }
-             triCount = 12 * (ny - 1) + 12 * (nx - 1);
-        counter = 0;
-        //лицевая сторона
-        while (counter < nx - 1)
-        {
-            int counter2 = 0;
-            while (counter2 < ny - 1)
-            {
-                tmpTriangles[triCount+6 * counter*(ny-1)+counter2 * 6] = 2 * counter * ny +2 * counter2 + ny * 2;
-                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 1] = 2 * counter * ny + 2 * counter2;
-                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 2] = 2 * counter * ny + 2 * counter2 + ny * 2 + 2;
-                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 3] = 2 * counter * ny + 2 * counter2;
-                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 4] = 2 * counter * ny + 2 * counter2 + 2;
-                tmpTriangles[triCount + 6 *counter * (ny - 1) + counter2 * 6 + 5] = 2 * counter * ny + 2 * counter2 + ny * 2 + 2;
-                counter2++;
-            }
-            counter++;
-        }
-        triCount += 6*(ny-1)*(nx-1);
-        counter = 0;
-        //задняя сторона
-        while (counter < nx - 1)
-        {
-            int counter2 = 0;
-            while (counter2 < ny - 1)
-            {
-                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6] = 2 * counter * ny + 2 * counter2 + ny * 2+1;
-                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 1] = 2 * counter * ny + 2 * counter2 + ny * 2 + 3;
-                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 2] = 2 * counter * ny + 2 * counter2+1;
-                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 3] = 2 * counter * ny + 2 * counter2+1;
-                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 4] = 2 * counter * ny + 2 * counter2 + ny * 2 + 3;
-                tmpTriangles[triCount + 6 * counter * (ny - 1) + counter2 * 6 + 5] = 2 * counter * ny + 2 * counter2 + 3; 
-                counter2++;
-            }
-            counter++;
-        }
-        m.triangles = tmpTriangles;
-        // m.triangles = new int[] { 48,49,50,49,51,50};
-        m.RecalculateNormals();
-
-        return m;
     }
 }

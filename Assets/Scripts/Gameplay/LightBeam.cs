@@ -43,7 +43,7 @@ public class LightBeam : MonoBehaviour
         CreateMesh();
     }
 
-    void Update()
+    void FixedUpdate()
     {
         UpdateMesh();
     }
