@@ -65,6 +65,9 @@ public class DarknessVolume : MonoBehaviour
     private int _yCount;
     private bool _rebuildRequired = false;
 
+    private Vector3 _boundsMin;
+    private Vector3 _boundsSize;
+
     // В редакторе не работает. Только при запуске игры
     void Start ()
 	{
@@ -115,26 +118,16 @@ public class DarknessVolume : MonoBehaviour
 
     public void OnBeamRayHit(RaycastHit hit)
     {
-        var mesh = _meshCollider.sharedMesh;
-        var triangles = mesh.triangles;
-        var i1 = triangles[hit.triangleIndex * 3 + 0] / 2;
-        var i2 = triangles[hit.triangleIndex * 3 + 1] / 2;
-        var i3 = triangles[hit.triangleIndex * 3 + 2] / 2;
-
-        var x1 = 0;
-        var y1 = 0;
-        CoordFromIndex(i1, out x1, out y1);
-        Decrease(i1);
-        Decrease(i2);
-        Decrease(i3);
-
-        Decrease(x1, y1 - 1, Splash);
-        Decrease(x1, y1 + 1, Splash);
-        Decrease(x1 - 1, y1, Splash);
-        Decrease(x1 + 1, y1, Splash);
+        //Debug.DrawLine(hit.point, _boundsMin);
+        var x = (int)(_xCount * (hit.point.x - _boundsMin.x) / _boundsSize.x);
+        var y = (int)(_yCount * (hit.point.y - _boundsMin.y) / _boundsSize.y);
+        Decrease(x, y, 1f);
+        
+        Decrease(x, y - 1, Splash);
+        Decrease(x, y + 1, Splash);
+        Decrease(x - 1, y, Splash);
+        Decrease(x + 1, y, Splash);
     }
-
-    
 
     [ContextMenu("Init")]
     void Init()
@@ -232,6 +225,9 @@ public class DarknessVolume : MonoBehaviour
         BuildFrontier();
         BuildMesh();
         _rebuildRequired = false;
+        
+        _boundsMin = transform.TransformVector(_meshCollider.bounds.min);
+        _boundsSize = transform.TransformVector(_meshCollider.bounds.size);
     }
 
     void BuildFrontier()
