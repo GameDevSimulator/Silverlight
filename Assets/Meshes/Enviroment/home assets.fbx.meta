@@ -1,0 +1,373 @@
+fileFormatVersion: 2
+guid: 1c176fd9720457f419864bfacaf04f68
+timeCreated: 1477504208
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: balk
+    100002: bar table
+    100004: bed
+    100006: big floor
+    100008: big picture
+    100010: book shelf
+    100012: boy`s table
+    100014: broken floor
+    100016: broken wall
+    100018: chear
+    100020: Dishwasher
+    100022: flashlight
+    100024: floor +stairs hole
+    100026: floor big
+    100028: floor small
+    100030: floor+stairs
+    100032: frech
+    100034: half floor
+    100036: //RootNode
+    100038: kitchen shelfs
+    100040: kitchen shelfs 2
+    100042: lamp
+    100044: matras
+    100046: middle picture.001
+    100048: pc
+    100050: pew
+    100052: pew main
+    100054: pew.001
+    100056: pillow
+    100058: rack
+    100060: roof  middle
+    100062: roof line
+    100064: roof middle
+    100066: roof small
+    100068: roof window
+    100070: roof window frame
+    100072: shelf
+    100074: sink
+    100076: small picture
+    100078: sofa
+    100080: stairs
+    100082: stairs small
+    100084: stove
+    100086: table
+    100088: tris wall big
+    100090: tv
+    100092: tv shelf
+    100094: vase
+    100096: wall +door
+    100098: wall +window
+    100100: wall angle big
+    100102: wall long
+    100104: wall middle
+    100106: wall small
+    100108: wall tris small
+    100110: warkshop
+    100112: window
+    100114: window frame
+    100116: wooden stairs
+    100118: wooden stairs door
+    100120: wooden stairs frame
+    400000: balk
+    400002: bar table
+    400004: bed
+    400006: big floor
+    400008: big picture
+    400010: book shelf
+    400012: boy`s table
+    400014: broken floor
+    400016: broken wall
+    400018: chear
+    400020: Dishwasher
+    400022: flashlight
+    400024: floor +stairs hole
+    400026: floor big
+    400028: floor small
+    400030: floor+stairs
+    400032: frech
+    400034: half floor
+    400036: //RootNode
+    400038: kitchen shelfs
+    400040: kitchen shelfs 2
+    400042: lamp
+    400044: matras
+    400046: middle picture.001
+    400048: pc
+    400050: pew
+    400052: pew main
+    400054: pew.001
+    400056: pillow
+    400058: rack
+    400060: roof  middle
+    400062: roof line
+    400064: roof middle
+    400066: roof small
+    400068: roof window
+    400070: roof window frame
+    400072: shelf
+    400074: sink
+    400076: small picture
+    400078: sofa
+    400080: stairs
+    400082: stairs small
+    400084: stove
+    400086: table
+    400088: tris wall big
+    400090: tv
+    400092: tv shelf
+    400094: vase
+    400096: wall +door
+    400098: wall +window
+    400100: wall angle big
+    400102: wall long
+    400104: wall middle
+    400106: wall small
+    400108: wall tris small
+    400110: warkshop
+    400112: window
+    400114: window frame
+    400116: wooden stairs
+    400118: wooden stairs door
+    400120: wooden stairs frame
+    2300000: balk
+    2300002: bar table
+    2300004: bed
+    2300006: big floor
+    2300008: big picture
+    2300010: book shelf
+    2300012: boy`s table
+    2300014: broken floor
+    2300016: broken wall
+    2300018: chear
+    2300020: Dishwasher
+    2300022: flashlight
+    2300024: floor +stairs hole
+    2300026: floor big
+    2300028: floor small
+    2300030: floor+stairs
+    2300032: frech
+    2300034: half floor
+    2300036: kitchen shelfs
+    2300038: kitchen shelfs 2
+    2300040: lamp
+    2300042: matras
+    2300044: middle picture.001
+    2300046: pc
+    2300048: pew
+    2300050: pew main
+    2300052: pew.001
+    2300054: pillow
+    2300056: rack
+    2300058: roof  middle
+    2300060: roof line
+    2300062: roof middle
+    2300064: roof small
+    2300066: roof window
+    2300068: roof window frame
+    2300070: shelf
+    2300072: sink
+    2300074: small picture
+    2300076: sofa
+    2300078: stairs
+    2300080: stairs small
+    2300082: stove
+    2300084: table
+    2300086: tris wall big
+    2300088: tv
+    2300090: tv shelf
+    2300092: vase
+    2300094: wall +door
+    2300096: wall +window
+    2300098: wall angle big
+    2300100: wall long
+    2300102: wall middle
+    2300104: wall small
+    2300106: wall tris small
+    2300108: warkshop
+    2300110: window
+    2300112: window frame
+    2300114: wooden stairs
+    2300116: wooden stairs door
+    2300118: wooden stairs frame
+    3300000: balk
+    3300002: bar table
+    3300004: bed
+    3300006: big floor
+    3300008: big picture
+    3300010: book shelf
+    3300012: boy`s table
+    3300014: broken floor
+    3300016: broken wall
+    3300018: chear
+    3300020: Dishwasher
+    3300022: flashlight
+    3300024: floor +stairs hole
+    3300026: floor big
+    3300028: floor small
+    3300030: floor+stairs
+    3300032: frech
+    3300034: half floor
+    3300036: kitchen shelfs
+    3300038: kitchen shelfs 2
+    3300040: lamp
+    3300042: matras
+    3300044: middle picture.001
+    3300046: pc
+    3300048: pew
+    3300050: pew main
+    3300052: pew.001
+    3300054: pillow
+    3300056: rack
+    3300058: roof  middle
+    3300060: roof line
+    3300062: roof middle
+    3300064: roof small
+    3300066: roof window
+    3300068: roof window frame
+    3300070: shelf
+    3300072: sink
+    3300074: small picture
+    3300076: sofa
+    3300078: stairs
+    3300080: stairs small
+    3300082: stove
+    3300084: table
+    3300086: tris wall big
+    3300088: tv
+    3300090: tv shelf
+    3300092: vase
+    3300094: wall +door
+    3300096: wall +window
+    3300098: wall angle big
+    3300100: wall long
+    3300102: wall middle
+    3300104: wall small
+    3300106: wall tris small
+    3300108: warkshop
+    3300110: window
+    3300112: window frame
+    3300114: wooden stairs
+    3300116: wooden stairs door
+    3300118: wooden stairs frame
+    4300000: lamp
+    4300002: warkshop
+    4300004: wall angle big
+    4300006: big floor
+    4300008: roof middle
+    4300010: roof  middle
+    4300012: roof small
+    4300014: window
+    4300016: wall middle
+    4300018: broken floor
+    4300020: floor +stairs hole
+    4300022: tris wall big
+    4300024: wall tris small
+    4300026: pew
+    4300028: pillow
+    4300030: floor+stairs
+    4300032: half floor
+    4300034: wall long
+    4300036: wall small
+    4300038: floor small
+    4300040: frech
+    4300042: window frame
+    4300044: wall +window
+    4300046: big picture
+    4300048: small picture
+    4300050: vase
+    4300052: tv
+    4300054: floor big
+    4300056: chear
+    4300058: table
+    4300060: tv shelf
+    4300062: middle picture.001
+    4300064: bar table
+    4300066: kitchen shelfs
+    4300068: Dishwasher
+    4300070: kitchen shelfs 2
+    4300072: sofa
+    4300074: stove
+    4300076: stairs
+    4300078: stairs small
+    4300080: sink
+    4300082: wooden stairs
+    4300084: wooden stairs frame
+    4300086: wooden stairs door
+    4300088: rack
+    4300090: book shelf
+    4300092: wall +door
+    4300094: pc
+    4300096: pew.001
+    4300098: pew main
+    4300100: matras
+    4300102: shelf
+    4300104: bed
+    4300106: boy`s table
+    4300108: balk
+    4300110: broken wall
+    4300112: roof line
+    4300114: roof window frame
+    4300116: roof window
+    4300118: flashlight
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
