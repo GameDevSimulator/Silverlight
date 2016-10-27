@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ModuleManager">
+    <modules>
+      <module name="silverlight" dirurl="file://$PROJECT_DIR$" current-layer="Default">
+        <module-layer name="Default">
+          <extension id="unity3d" sdk-module-name="" sdk-name="Unity3D 5.5.0">
+            <define>UNITY_EDITOR</define>
+            <define>DEBUG</define>
+            <define>TRACE</define>
+          </extension>
+          <content url="file://$MODULE_DIR$">
+            <content-folder type="EXCLUDED" url="file://$MODULE_DIR$/.consulo" />
+            <content-folder type="EXCLUDED" url="file://$MODULE_DIR$/Library" />
+            <content-folder type="EXCLUDED" url="file://$MODULE_DIR$/Temp" />
+            <content-folder type="EXCLUDED" url="file://$MODULE_DIR$/test_Data" />
+          </content>
+          <orderEntry type="sourceFolder" />
+        </module-layer>
+      </module>
+      <module name="Assembly-CSharp-firstpass" current-layer="Default">
+        <module-layer name="Default">
+          <extension id="unity3d-child" />
+          <extension id="unity3d-csharp-child" unsafe-code="false" language-version-module-name="" language-version-name="" />
+          <orderEntry type="sourceFolder" />
+          <orderEntry type="dot-net-library" name="mscorlib" />
+          <orderEntry type="dot-net-library" name="UnityEditor" />
+          <orderEntry type="dot-net-library" name="UnityEngine" />
+          <orderEntry type="dot-net-library" name="UnityEngine.UI" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Networking" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Analytics" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Advertisements" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Purchasing" />
+          <orderEntry type="dot-net-library" name="System" />
+          <orderEntry type="dot-net-library" name="System.Core" />
+          <orderEntry type="dot-net-library" name="System.Xml" />
+          <orderEntry type="dot-net-library" name="System.Xml.Linq" />
+        </module-layer>
+      </module>
+      <module name="Assembly-UnityScript-firstpass" current-layer="Default">
+        <module-layer name="Default">
+          <extension id="unity3d-child" />
+          <extension id="unity3d-unityscript-child" />
+          <orderEntry type="sourceFolder" />
+          <orderEntry type="dot-net-library" name="mscorlib" />
+          <orderEntry type="dot-net-library" name="UnityEditor" />
+          <orderEntry type="dot-net-library" name="UnityEngine" />
+          <orderEntry type="dot-net-library" name="UnityEngine.UI" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Networking" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Analytics" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Advertisements" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Purchasing" />
+          <orderEntry type="dot-net-library" name="System" />
+          <orderEntry type="dot-net-library" name="System.Core" />
+          <orderEntry type="dot-net-library" name="System.Xml" />
+          <orderEntry type="dot-net-library" name="System.Xml.Linq" />
+        </module-layer>
+      </module>
+      <module name="Assembly-CSharp-Editor" current-layer="Default">
+        <module-layer name="Default">
+          <extension id="unity3d-child" />
+          <extension id="unity3d-csharp-child" unsafe-code="false" language-version-module-name="" language-version-name="" />
+          <extension id="unity3d-nunit-child" />
+          <orderEntry type="sourceFolder" />
+          <orderEntry type="module" module-name="Assembly-UnityScript-firstpass" />
+          <orderEntry type="module" module-name="Assembly-CSharp-firstpass" />
+          <orderEntry type="module" module-name="Assembly-CSharp" />
+          <orderEntry type="dot-net-library" name="UnityEditor.Graphs" />
+          <orderEntry type="dot-net-library" name="UnityEditor.UI" />
+          <orderEntry type="dot-net-library" name="nunit.framework" />
+          <orderEntry type="dot-net-library" name="mscorlib" />
+          <orderEntry type="dot-net-library" name="UnityEditor" />
+          <orderEntry type="dot-net-library" name="UnityEngine" />
+          <orderEntry type="dot-net-library" name="UnityEngine.UI" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Networking" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Analytics" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Advertisements" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Purchasing" />
+          <orderEntry type="dot-net-library" name="System" />
+          <orderEntry type="dot-net-library" name="System.Core" />
+          <orderEntry type="dot-net-library" name="System.Xml" />
+          <orderEntry type="dot-net-library" name="System.Xml.Linq" />
+        </module-layer>
+      </module>
+      <module name="Assembly-CSharp" current-layer="Default">
+        <module-layer name="Default">
+          <extension id="unity3d-child" />
+          <extension id="unity3d-csharp-child" unsafe-code="false" language-version-module-name="" language-version-name="" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/CameraController.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/CameraController.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/CatController.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/CatController.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/Character.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/Character.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/Darkness.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/Darkness.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/DarknessVolume.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/DarknessVolume.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/FlashLight.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/FlashLight.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/GameManager.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/GameManager.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/LightBeam.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/LightBeam.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/PhysicsCharacterController.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/PhysicsCharacterController.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/PlayerController.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Gameplay/PlayerController.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Tags.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Tags.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/ObjectsArray.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/ObjectsArray.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/RandomArray.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/RandomArray.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/Rotator.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/Rotator.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/SceneFadeInOut.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/SceneFadeInOut.cs.meta" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/Singleton.cs" />
+          <content url="file://$USER_HOME$/dev/silverlight/Assets/Scripts/Utility/Singleton.cs.meta" />
+          <orderEntry type="sourceFolder" />
+          <orderEntry type="module" module-name="Assembly-UnityScript-firstpass" />
+          <orderEntry type="module" module-name="Assembly-CSharp-firstpass" />
+          <orderEntry type="dot-net-library" name="mscorlib" />
+          <orderEntry type="dot-net-library" name="UnityEditor" />
+          <orderEntry type="dot-net-library" name="UnityEngine" />
+          <orderEntry type="dot-net-library" name="UnityEngine.UI" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Networking" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Analytics" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Advertisements" />
+          <orderEntry type="dot-net-library" name="UnityEngine.Purchasing" />
+          <orderEntry type="dot-net-library" name="System" />
+          <orderEntry type="dot-net-library" name="System.Core" />
+          <orderEntry type="dot-net-library" name="System.Xml" />
+          <orderEntry type="dot-net-library" name="System.Xml.Linq" />
+        </module-layer>
+      </module>
+    </modules>
+  </component>
+</project>
