@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using Assets.Scripts.Game;
+using Assets.Scripts.Gameplay.Darkness;
 using UnityEditor;
 
 [RequireComponent(typeof(MeshRenderer))]
@@ -166,10 +167,14 @@ public class LightBeam : MonoBehaviour
                         }
                     }
 
-                    var dknVolume = hit.collider.gameObject.GetComponent<DarknessVolume>();
+                    var dknVolume = hit.collider.gameObject.GetComponent<DarknessVolumePrototype>();
                     if (dknVolume != null && (hit.point - transform.position).magnitude < _maxDistance)
                     {
-                        dknVolume.OnBeamRayHit(hit);
+                        Vector3 endPoint;
+                        if (dknVolume.OnBeamRayHit(hit, rdir, out endPoint))
+                        {
+                            hit.point = endPoint;
+                        }
                     }
 
                     break;
