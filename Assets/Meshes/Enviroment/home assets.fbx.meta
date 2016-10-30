@@ -308,7 +308,7 @@ ModelImporter:
     4300116: roof window
     4300118: flashlight
   materials:
-    importMaterials: 1
+    importMaterials: 0
     materialName: 0
     materialSearch: 1
   animations:

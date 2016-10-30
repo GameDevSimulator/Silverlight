@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(PhysicsCharacterController))]
 public class CatController : MonoBehaviour
 {
     public float Speed = 1f;
     public float JumpSpeed = 10f;
     public float Gravity = 20.0F;
 
-    private CharacterController _controller;
+    private PhysicsCharacterController _controller;
 
     void Awake()
     {
@@ -16,22 +17,19 @@ public class CatController : MonoBehaviour
 
     void Start ()
     {
-        _controller = GetComponent<CharacterController>();
+        _controller = GetComponent<PhysicsCharacterController>();
     }
 
     void Update ()
     {
         if(GameManager.Instance.CurrentControllableCharacter == Character.Cat)
         {
-            var moveDirection = new Vector3(Input.GetAxis("Horizontal") * Speed, 0, 0);
-            
-            if (_controller.isGrounded && Input.GetButton("Jump")) //прыжок
+
+            if (Input.GetButtonDown("Jump"))
             {
-                moveDirection.y = JumpSpeed;
+                _controller.Jump();
             }
-            moveDirection.y -= Gravity * Time.deltaTime;
-            Debug.Log(moveDirection);
-            _controller.Move(moveDirection * Time.deltaTime);
+            _controller.Move(Input.GetAxis("Horizontal"));
         }
     }
     
