@@ -37,3 +37,8 @@ LightmapSnapshot.asset
 LightmapSnapshot.asset.meta
 LightingData.asset
 LightingData.asset.meta
+
+# Consulo IDE
+.consulo/
+.consulo/*
+/.consulo/
