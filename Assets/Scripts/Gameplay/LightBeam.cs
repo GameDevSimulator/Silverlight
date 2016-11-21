@@ -114,7 +114,7 @@ public class LightBeam : MonoBehaviour
     void UpdateMesh()
     {
         var vertices = new List<Vector3>(_vertices);
-        var uvs = new List<Vector2>(_uvs);
+        //var uvs = new List<Vector2>(_uvs);
         //var normals = new List<Vector3>(_normals);
         var tris = new List<int>(_tris);
 

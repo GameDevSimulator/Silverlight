@@ -20,8 +20,8 @@ namespace Assets.Scripts.Gameplay.Darkness
         [Range(0.1f, 0.9f)]
         public float NeighborThreshold = 0.5f;
 
-        [Range(0.1f, 0.9f)]
-        public float RayPassThreshold = 0.5f;
+        [Range(0.1f, 1f)]
+        public float RayPower = 0.2f;
 
         public AnimationCurve DarkenCurve;
         public AnimationCurve RaypassCurve;
@@ -36,10 +36,11 @@ namespace Assets.Scripts.Gameplay.Darkness
         private int _verticesWidth;
         private int _verticesHeight;
 
-        private Vector3 _cellExtents;
-
         private bool _meshColorsUpdateRequired = false;
         private bool _stateUpdateRequired = false;
+
+        private Vector3 _cellSize;
+        private Vector3 _halfCellSize;
 
         void Start()
         {
@@ -58,8 +59,6 @@ namespace Assets.Scripts.Gameplay.Darkness
             _verticesWidth = _cellsWidth + 1;
             _verticesHeight = _cellsHeight + 1;
 
-            _cellExtents = new Vector3(_collider.bounds.size.x/_cellsWidth, _collider.bounds.size.y/_cellsHeight)/2f;
-
             _colors = new Color32[_verticesWidth * _verticesHeight];
             _meshFilter.mesh = CreateMesh();
 
@@ -73,6 +72,9 @@ namespace Assets.Scripts.Gameplay.Darkness
             }
 
             _meshColorsUpdateRequired = true;
+
+            _cellSize = Div(_collider.bounds.size, new Vector3(_cellsWidth, _cellsHeight, 1));
+            _halfCellSize = _cellSize*0.5f;
         }
 
         void Update()
@@ -101,7 +103,7 @@ namespace Assets.Scripts.Gameplay.Darkness
                 {
                     for (var y = 0; y < _cellsHeight; y++)
                     {
-                        LightCell(x, y);
+                        //LightCell(x, y);
                     }
                 }
             }
@@ -114,9 +116,10 @@ namespace Assets.Scripts.Gameplay.Darkness
             {
                 for (var y = 0; y < _cellsHeight; y++)
                 {
-                    var val = DarkenCurve.Evaluate(PeripherySum(x, y) / 10f);
+                    var val = DarkenCurve.Evaluate(PeripheryAvg(x, y));
                     if (val < NeighborThreshold)
                     {
+                        //DarkenCell(x, y, Random.Range(0.5f, 1f));
                         DarkenCell(x, y, val);
                         _meshColorsUpdateRequired = true;
                     }
@@ -127,24 +130,9 @@ namespace Assets.Scripts.Gameplay.Darkness
 
         public bool OnBeamRayHit(RaycastHit hit, Vector3 direction, out Vector3 endPoint)
         {
-            var dir = direction.normalized;
             endPoint = BoundsIntersect(_collider.bounds, hit.point, hit.point + direction*100f);
-            
-            //Debug.DrawLine(hit.point, endPoint);
-
-            var x1 = 0;
-            var y1 = 0;
-            V2XY(transform.InverseTransformPoint(hit.point + _cellExtents), out x1, out y1, _cellsWidth, _cellsHeight);
-
-            var x2 = 0;
-            var y2 = 0;
-            V2XY(transform.InverseTransformPoint(endPoint + _cellExtents), out x2, out y2, _cellsWidth, _cellsHeight);
-
-            LightLine(x1, y1, x2, y2, 0.2f);
-            var d1 = transform.TransformPoint(XY2V(x1, y1, _cellsWidth, _cellsHeight));
-            var d2 = transform.TransformPoint(XY2V(x2, y2, _cellsWidth, _cellsHeight));
-            Debug.DrawLine(d1, d2, Color.green);
-            Debug.DrawLine(d1, d1 + Vector3.back, Color.green);
+            Debug.DrawLine(hit.point, endPoint);
+            LightLine(transform.InverseTransformPoint(hit.point), transform.InverseTransformPoint(endPoint), RayPower);
 
             return true;
         }
@@ -167,107 +155,180 @@ namespace Assets.Scripts.Gameplay.Darkness
             sum += _colors[XY2I(x, y + 1, _verticesWidth)].r;
             sum += _colors[XY2I(x + 1, y, _verticesWidth)].r;
             sum += _colors[XY2I(x + 1, y + 1, _verticesWidth)].r;
-            return sum * 0.25f / 255f;
+            return 1f - sum * 0.25f / 255f;
         }
 
-        private float PeripherySum(int x, int y)
+        private float CellStateAt(Vector3 p)
         {
+            var x = 0;
+            var y = 0;
+            V2XY(p, out x, out y, _cellsWidth, _cellsHeight);
+            var sum = _colors[XY2I(x, y, _verticesWidth)].r;
+            sum += _colors[XY2I(x, y + 1, _verticesWidth)].r;
+            sum += _colors[XY2I(x + 1, y, _verticesWidth)].r;
+            sum += _colors[XY2I(x + 1, y + 1, _verticesWidth)].r;
+            return 1f - sum * 0.25f / 255f;
+        }
+
+        private float PeripheryAvg(int x, int y)
+        {
+            const float cornersmod = 0.74f;
             var sum = 0f;
+            var count = 0.0f;
 
             if (x > 0)
             {
-                sum += _colors[XY2I(x - 1, y, _verticesWidth)].r;
-
                 if (y > 0)
-                    sum += _colors[XY2I(x - 1, y - 1, _verticesWidth)].r;
+                {
+                    sum += _colors[XY2I(x - 1, y - 1, _verticesWidth)].r*cornersmod;
+                    count++;
+                }
+
+                sum += _colors[XY2I(x - 1, y, _verticesWidth)].r;
+                count++;
 
                 if (y < _verticesHeight - 1)
-                    sum += _colors[XY2I(x - 1, y + 1, _verticesWidth)].r;
+                {
+                    sum += _colors[XY2I(x - 1, y + 1, _verticesWidth)].r*cornersmod;
+                    count++;
+                }
 
                 if (y < _verticesHeight - 2)
-                    sum += _colors[XY2I(x - 1, y + 2, _verticesWidth)].r;
+                {
+                    sum += _colors[XY2I(x - 1, y + 2, _verticesWidth)].r * cornersmod;
+                    count++;
+                }
             }
 
             if (y > 0)
+            {
                 sum += _colors[XY2I(x, y - 1, _verticesWidth)].r;
+                count++;
+            }
+
+            if (y < _verticesHeight - 1)
+            {
+                sum += _colors[XY2I(x, y + 1, _verticesWidth)].r;
+                count++;
+            }
 
             if (y < _verticesHeight - 2)
+            {
                 sum += _colors[XY2I(x, y + 2, _verticesWidth)].r;
+                count++;
+            }
 
             if (x < _verticesWidth - 1)
             {
                 if (y > 0)
-                    sum += _colors[XY2I(x + 1, y - 1, _verticesWidth)].r;
+                {
+                    sum += _colors[XY2I(x + 1, y - 1, _verticesWidth)].r*cornersmod;
+                    count++;
+                }
+
+                sum += _colors[XY2I(x + 1, y, _verticesWidth)].r;
+                count++;
+
+                if (y < _verticesHeight - 1)
+                {
+                    sum += _colors[XY2I(x + 1, y + 1, _verticesWidth)].r*cornersmod;
+                    count++;
+                }
 
                 if (y < _verticesHeight - 2)
-                    sum += _colors[XY2I(x + 1, y + 2, _verticesWidth)].r;
+                {
+                    sum += _colors[XY2I(x + 1, y + 2, _verticesWidth)].r * cornersmod;
+                    count++;
+                }
             }
 
             if (x < _verticesWidth - 2)
             {
                 if (y > 0)
-                    sum += _colors[XY2I(x + 2, y - 1, _verticesWidth)].r;
+                {
+                    sum += _colors[XY2I(x + 2, y - 1, _verticesWidth)].r * cornersmod;
+                    count++;
+                }
 
                 sum += _colors[XY2I(x + 2, y, _verticesWidth)].r;
+                count++;
 
                 if (y < _verticesHeight - 1)
-                    sum += _colors[XY2I(x + 2, y + 1, _verticesWidth)].r;
+                {
+                    sum += _colors[XY2I(x + 2, y + 1, _verticesWidth)].r * cornersmod;
+                    count++;
+                }
 
                 if (y < _verticesHeight - 2)
-                    sum += _colors[XY2I(x + 2, y + 2, _verticesWidth)].r;
+                {
+                    sum += _colors[XY2I(x + 2, y + 2, _verticesWidth)].r * cornersmod;
+                    count++;
+                }
             }
 
-            return sum / 255f;
+            return sum / 255f / count;
         }
 
         private void DarkenCell(int x, int y, float modifier = 1f)
         {
-            var amount = (255) * DarkenSpeed * Time.deltaTime * modifier;
+            var amount = (255) * DarkenSpeed * Time.deltaTime * modifier * 0.25f;
             _colors[XY2I(x, y, _verticesWidth)].r = (byte)Mathf.Max(0, _colors[XY2I(x, y, _verticesWidth)].r - amount);
             _colors[XY2I(x, y + 1, _verticesWidth)].r = (byte)Mathf.Max(0, _colors[XY2I(x, y + 1, _verticesWidth)].r - amount);
             _colors[XY2I(x + 1, y, _verticesWidth)].r = (byte)Mathf.Max(0, _colors[XY2I(x + 1, y, _verticesWidth)].r - amount);
             _colors[XY2I(x + 1, y + 1, _verticesWidth)].r = (byte)Mathf.Max(0, _colors[XY2I(x + 1, y + 1, _verticesWidth)].r - amount);
         }
 
-        private void LightCell(int x, int y, float modifier = 1f)
+        private void LightCellSpatial(Vector3 at, int x, int y, float modifier = 1f)
         {
+            var p = XY2V(x, y, _cellsWidth, _cellsHeight);
+            var r = Div(p - at, _cellSize);
+
             var amount = (255) * LightenSpeed * Time.deltaTime * modifier;
-            _colors[XY2I(x, y, _verticesWidth)].r = (byte)Mathf.Min(255, _colors[XY2I(x, y, _verticesWidth)].r + amount);
-            _colors[XY2I(x, y + 1, _verticesWidth)].r = (byte)Mathf.Min(255, _colors[XY2I(x, y + 1, _verticesWidth)].r + amount);
-            _colors[XY2I(x + 1, y, _verticesWidth)].r = (byte)Mathf.Min(255, _colors[XY2I(x + 1, y, _verticesWidth)].r + amount);
-            _colors[XY2I(x + 1, y + 1, _verticesWidth)].r = (byte)Mathf.Min(255, _colors[XY2I(x + 1, y + 1, _verticesWidth)].r + amount);
+            _colors[XY2I(x, y, _verticesWidth)].r = (byte)Mathf.Min(255, _colors[XY2I(x, y, _verticesWidth)].r + amount * (Vector3.one - r).magnitude);
+            _colors[XY2I(x, y + 1, _verticesWidth)].r = (byte)Mathf.Min(255, _colors[XY2I(x, y + 1, _verticesWidth)].r + amount * new Vector3(1f - r.x, r.y).magnitude);
+            _colors[XY2I(x + 1, y, _verticesWidth)].r = (byte)Mathf.Min(255, _colors[XY2I(x + 1, y, _verticesWidth)].r + amount * new Vector3(r.x, 1f - r.y).magnitude);
+            _colors[XY2I(x + 1, y + 1, _verticesWidth)].r = (byte)Mathf.Min(255, _colors[XY2I(x + 1, y + 1, _verticesWidth)].r + amount * r.magnitude);
         }
 
-        private void LightLine(int x1, int y1, int x2, int y2, float modifier = 1f)
+        private void LightLine(Vector3 a, Vector3 b, float modifier = 1f)
         {
-            var len = Mathf.Sqrt(Mathf.Pow(x2 - x1, 2) + Mathf.Pow(y2 - y1, 2));
-            var steps = Mathf.Max(_cellsWidth, _cellsHeight);
-            var dx = (x2 - x1) / (float)steps;
-            var dy = (y2 - y1) / (float)steps;
-            var x = (float)x1;
-            var y = (float)y1;
+            var d = (b - a);
+            var len = d.magnitude;
+            var steps = Mathf.Max(_cellsWidth, _cellsHeight) * 2f;
+            var dstep = d / (float)steps;
 
-            var mod = len / steps;
+            var p = a;
+
+            var mod = len / (float)steps;
             var currentMod = mod;
 
             for (var i = 0; i < steps; i++)
             {
-                //var xx = Mathf.RoundToInt(x);
-                //var yy = Mathf.RoundToInt(y);
-                var xx = Mathf.FloorToInt(x);
-                var yy = Mathf.FloorToInt(y);
+                var xx = 0;
+                var yy = 0;
 
-                LightCell(xx, yy, currentMod * modifier);
-                x += dx;
-                y += dy;
+                V2XY(p, out xx, out yy, _cellsWidth, _cellsHeight);
 
-                if(x < 0 || x > _cellsWidth - 1)
+
+
+                /*
+                if (xx < 0 || xx > _cellsWidth - 1)
+                    continue;
+                if (yy < 0 || yy > _cellsHeight - 1)
+                    continue;*/
+
+                //LightCell(xx, yy, currentMod * modifier + distance);
+                LightCellSpatial(p, xx, yy, currentMod);
+                currentMod *= RaypassCurve.Evaluate(CellState(xx, yy));
+
+                p += dstep;
+
+                /*
+                if (p.x < 0 || p.x > _cellsWidth - 1)
                     break;
 
-                if (y < 0 || y > _cellsHeight - 1)
-                    break;
-
-                currentMod = currentMod * RaypassCurve.Evaluate(1f - CellState(xx, yy));
+                if (p.y < 0 || p.y > _cellsHeight - 1)
+                    break;*/
             }
         }
 
@@ -289,9 +350,18 @@ namespace Assets.Scripts.Gameplay.Darkness
 
         private void V2XY(Vector3 pos, out int x, out int y, float width, float height)
         {
-            var relPos = new Vector3(_collider.bounds.extents.x, _collider.bounds.extents.y) + pos;
-            x = Mathf.FloorToInt(relPos.x * width / _collider.bounds.size.x + 0.01f);
-            y = Mathf.FloorToInt(relPos.y * height / _collider.bounds.size.y + 0.01f);
+            var relPos = pos + _collider.bounds.extents;
+            x = Mathf.FloorToInt(relPos.x * width / _collider.bounds.size.x);
+            y = Mathf.FloorToInt(relPos.y * height / _collider.bounds.size.y);
+        }
+
+        private Vector3 V2REL(Vector3 pos, float width, float height)
+        {
+            var relPos = pos + new Vector3(_collider.bounds.extents.x, _collider.bounds.extents.y);
+            return new Vector3(
+                relPos.x * width / _collider.bounds.size.x,
+                relPos.y * height / _collider.bounds.size.y
+            );
         }
 
         private static Vector3 BoundsIntersect(Bounds bounds, Vector3 inside, Vector3 outside)
@@ -303,6 +373,16 @@ namespace Assets.Scripts.Gameplay.Darkness
             bounds.IntersectRay(new Ray(outside, -dir), out distance);
 
             return outside - dir * distance;
+        }
+
+        private static Vector3 Div(Vector3 a, Vector3 b)
+        {
+            return new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
+        }
+
+        private static Vector3 Mul(Vector3 a, Vector3 b)
+        {
+            return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
         }
 
         private Mesh CreateMesh()
@@ -368,10 +448,10 @@ namespace Assets.Scripts.Gameplay.Darkness
             {
                 if (collider.attachedRigidbody.velocity.y < 0)
                 {
-                    collider.attachedRigidbody.velocity = new Vector3(collider.attachedRigidbody.velocity.x, 0,
-                        collider.attachedRigidbody.velocity.z);
+                    collider.attachedRigidbody.velocity = Mul(collider.attachedRigidbody.velocity,
+                        new Vector3(0, 0.5f, 0));
 
-                    collider.attachedRigidbody.AddForce(Vector3.up * 200f);
+                    //collider.attachedRigidbody.AddForce(Vector3.up * 200f, ForceMode.Impulse);
                 }
             }
         }
