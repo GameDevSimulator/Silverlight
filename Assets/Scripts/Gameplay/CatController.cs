@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Assets.Scripts.Gameplay;
 
 [RequireComponent(typeof(PhysicsCharacterController))]
 public class CatController : MonoBehaviour

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Gameplay;
+using UnityEngine;
 
 [RequireComponent(typeof(PhysicsCharacterController))]
 public class PlayerController : MonoBehaviour

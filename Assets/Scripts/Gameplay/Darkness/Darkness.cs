@@ -1,132 +1,271 @@
-﻿using UnityEngine;
-using System.Collections;
-using Assets.Scripts.Game;
-using UnityEngine.Rendering;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-[RequireComponent(typeof(MeshRenderer))]
-[RequireComponent(typeof(Collider))]
-public class Darkness : MonoBehaviour
+namespace Assets.Scripts.Gameplay.Darkness
 {
-    private readonly string shaderArg = "_DissolveValue";
+    [RequireComponent(typeof(MeshFilter))]
+    [RequireComponent(typeof(MeshRenderer))]
+    public class Darkness : MonoBehaviour
+    {
+        public Material ComputationalMaterial;
+        public float AngularDamping = 0.5f;
+        public float Friction = 0.9f;
+        public float VelocityDamping = 5f;
+        public bool ShowDebugState;
 
-    private Collider _collider;
-    private MeshRenderer _meshRenderer;
-    private float _state = 1.0f;
-    private bool _isLighted = false;
-    private bool _isColliderActive = true;
+        //private MeshFilter _meshFilter;
+        private MeshRenderer _meshRenderer;
 
-    [Range(0.05f, 10.0f)]
-    public float DissolveTime = 0.2f;
+        private RenderTexture _stateRenderTexture;
+        private RenderTexture _bufferRenderTexture;
 
-    [Range(0.05f, 10.0f)]
-    public float AppearTime = 2f;
+        private Material _materialInstance;
+        private Texture2D _state2D;
 
-    [Range(0.01f, 1.0f)]
-    public float RayPassThreshold = 0.5f;
+        private readonly List<DarknessInteractor> _interactors = new List<DarknessInteractor>();
+        private Rect _state2DRect;
+        private bool _update = false;
 
-    [Range(0.0f, 1.0f)]
-    public float ColliderDisableAt = 0.1f;
-
-    [Range(0.0f, 1.0f)]
-    public float ColliderEnableAt = 0.9f;
+#if DEBUG
+        private readonly Rect _rect = new Rect(0, 0, 256, 256);
+#endif
     
-    public AnimationCurve AppearCurve = AnimationCurve.Linear(0, 0, 1f, 1f);
-    public AnimationCurve DissolveCurve = AnimationCurve.Linear(0, 0, 1f, 1f);
-    public AnimationCurve DistToPlayerAppear = AnimationCurve.Linear(0, 0, 10f, 1f);
+        const string StateTextureName = "_StateTex";
+        const int RenderTextureDepth = 0;
+        const RenderTextureFormat RenderTextureFormat = UnityEngine.RenderTextureFormat.ARGB32;
 
-    void Start ()
-	{
-	    _collider = GetComponent<Collider>();
-	    _meshRenderer = GetComponent<MeshRenderer>();
-        _meshRenderer.material.SetFloat("_RandomValue", Random.value);
-    }
-	
-	void Update ()
-	{
-	    if (_isLighted && _state > 0f)
-	    {
-            _state -= Time.deltaTime / DissolveTime;
-
-            if (_isColliderActive && _state < ColliderDisableAt)
-	            DisableCollider();
-
-	        if (_state <= 0f)
-	        {
-                if (_isColliderActive)
-                    DisableCollider();
-                _state = 0f;
-	        }
-
-
-	        _meshRenderer.material.SetFloat(shaderArg, 1f - AppearCurve.Evaluate(_state));
+        void Awake()
+        {
+            if(_materialInstance == null)
+                _materialInstance = Instantiate(ComputationalMaterial);
         }
 
-        if (!_isLighted && _state < 1f)
+        void Start ()
         {
-            var distToPlayer = (GameManager.Instance.Player.transform.position - transform.position).magnitude;
-            _state += Time.deltaTime * (1f/ AppearTime) * DistToPlayerAppear.Evaluate(distToPlayer);
+            //_meshFilter = GetComponent<MeshFilter>();
+            _meshRenderer = GetComponent<MeshRenderer>();
 
-            if (!_isColliderActive && _state > ColliderEnableAt)
-                EnableCollider();
+            _stateRenderTexture = new RenderTexture(512, 512, RenderTextureDepth, RenderTextureFormat);
+            _stateRenderTexture.Create();
 
-            if (_state >= 1f)
+            _bufferRenderTexture = new RenderTexture(512, 512, RenderTextureDepth, RenderTextureFormat);
+            _bufferRenderTexture.Create();
+
+            Graphics.Blit(ComputationalMaterial.mainTexture, _stateRenderTexture);
+
+            _state2D = new Texture2D(_stateRenderTexture.width, _stateRenderTexture.height);
+            _state2DRect = new Rect(0, 0, _state2D.width, _state2D.height);
+
+            _interactors.Add(GameManager.Instance.Player.GetComponentInChildren<DarknessInteractor>());
+        }
+
+        void FixedUpdate()
+        {
+            _update = GeometryUtility.TestPlanesAABB(GeometryUtility.CalculateFrustumPlanes(Camera.main),
+                GetComponent<Collider>().bounds);
+
+            if (_update)
             {
-                if(!_isColliderActive)
-                    EnableCollider();
-                _state = 1f;
+                RenderState(_stateRenderTexture, _bufferRenderTexture);
+
+                // Proccess darkness
+                Graphics.Blit(_bufferRenderTexture, _stateRenderTexture, _materialInstance, 0);
+
+                // Update visuals from state
+                _meshRenderer.material.SetTexture(StateTextureName, _bufferRenderTexture);
+            }
+        }
+
+        private void RenderState(Texture source, RenderTexture dest)
+        {
+            Graphics.SetRenderTarget(dest);
+            GL.Clear(false, false, Color.black);
+            GL.PushMatrix();
+            _materialInstance.SetTexture("_MainTex", source);
+            _materialInstance.SetPass(1);
+            GL.LoadOrtho();
+            GL.Begin(GL.QUADS);
+            GL.Color(Color.white);
+
+            // Darkness quad
+            GL.TexCoord(new Vector3(0, 0));
+            GL.Vertex3(0, 0, 0);
+
+            GL.TexCoord(new Vector3(0, 1));
+            GL.Vertex3(0, 1, 0);
+
+            GL.TexCoord(new Vector3(1, 1));
+            GL.Vertex3(1, 1, 0);
+        
+            GL.TexCoord(new Vector3(1, 0));
+            GL.Vertex3(1, 0, 0);
+        
+            GL.End();
+        
+            foreach (var interactor in _interactors)
+            {
+                if (interactor.Interaction == DarknessInteractor.InteractionType.Dark)
+                {
+                    _materialInstance.SetPass(3);
+                    _materialInstance.SetFloat("_Outline", interactor.Outline);
+                    RenderMesh(interactor.transform, interactor.GetMesh(), interactor.Mode);
+                }
+
+
+                if (interactor.Interaction == DarknessInteractor.InteractionType.Light)
+                {
+                    _materialInstance.SetPass(2);
+                    _materialInstance.SetFloat("_Outline", interactor.Outline);
+                    RenderMesh(interactor.transform, interactor.GetMesh(), interactor.Mode);
+                }
+            }
+            GL.PopMatrix();
+
+            // TODO: OPTIMIZE PERFORMANCE BY C++ PLUGIN
+            // TODO: REMOVE PIPELINE STALLING
+            _state2D.ReadPixels(_state2DRect, 0, 0, false);
+            _state2D.Apply();
+        }
+
+        private void RenderMesh(Transform t, Mesh mesh, DarknessInteractor.ProcessingMode mode)
+        {
+            GL.Begin(GL.TRIANGLES);
+            foreach (var index in mesh.triangles)
+            {
+                var v = mesh.vertices[index];
+                v = World2GL(t.TransformPoint(v));
+                //GL.TexCoord(mesh.uv[mesh.triangles[i]]);
+                if(mode == DarknessInteractor.ProcessingMode.MeshWithColorData && mesh.colors.Length > 0)
+                    GL.Color(mesh.colors32[index]);
+                GL.Vertex3(v.x, v.y, v.z + 0.1f);
+            }
+            GL.End();
+        }
+
+        private Vector3 World2GL(Vector3 position)
+        {
+            return transform.InverseTransformPoint(position) + new Vector3(0.5f, 0.5f);
+        }
+
+        void OnGUI()
+        {
+#if DEBUG
+            if (ShowDebugState && _update)
+            {
+                GUI.DrawTexture(_rect, _stateRenderTexture, ScaleMode.ScaleToFit, false);
+            }
+#endif
+        }
+
+
+        void OnTriggerEnter(Collider col)
+        {
+            var interactor = col.GetComponent<DarknessInteractor>();
+            if (interactor != null)
+                _interactors.Add(interactor);
+        }
+
+        void OnTriggerExit(Collider col)
+        {
+            var interactor = col.GetComponent<DarknessInteractor>();
+            if (interactor != null)
+                _interactors.Remove(interactor);
+        }
+
+        void OnTriggerStay(Collider col)
+        {
+            if (col.attachedRigidbody != null)
+            {
+                var sample = 0f;
+                sample += SamplePhysicsAt(col, 0.1f, 0.5f);
+                sample += SamplePhysicsAt(col, 0.9f, 0.5f);
+                if (sample > 0.1f)
+                {
+                    col.gameObject.SendMessage("OnDarknessForceApplied", this, SendMessageOptions.DontRequireReceiver);
+                }
+            }
+        }
+
+        private float SamplePhysicsAt(Collider col, float xFactor, float mod)
+        {
+            var xpos = col.bounds.min.x + xFactor * col.bounds.size.x;
+
+            RaycastHit hit;
+            if (col.Raycast(new Ray(new Vector3(xpos, col.bounds.min.y - 1f), Vector3.up), out hit, 2f))
+            {
+                //var center = new Vector3(xpos, col.bounds.max.y);
+                //var bottom = new Vector3(xpos, col.bounds.min.y);
+                var sample = hit.point;
+                //var h = (sample - center).magnitude / (bottom - center).magnitude;
+                //h = Mathf.Max(h, 1f);
+
+                var forceFactor = GetState(sample);
+
+                if (forceFactor > 0.1f)
+                {
+                    //col.attachedRigidbody.AddForce(-col.attachedRigidbody.velocity * forceFactor, ForceMode.VelocityChange);
+                    //col.attachedRigidbody.velocity = col.attachedRigidbody.velocity*(1 - forceFactor);
+                
+                    var uplift = -Physics.gravity * col.attachedRigidbody.mass * forceFactor - col.attachedRigidbody.velocity * VelocityDamping;
+                    var friction = new Vector3(-col.attachedRigidbody.velocity.x * Friction, 0);
+                    Debug.DrawLine(sample, sample + uplift, Color.red);
+                    col.attachedRigidbody.AddForceAtPosition(uplift * mod + friction * mod, sample);
+                    col.attachedRigidbody.angularVelocity *= AngularDamping;
+                }
+
+
+                return forceFactor;
             }
 
-            _meshRenderer.material.SetFloat(shaderArg, 1f - AppearCurve.Evaluate(_state));
+            return 0f;
         }
-        
-	    _isLighted = false;
-	}
 
-    void DisableCollider()
-    {
-        _collider.isTrigger = true;
-        _isColliderActive = false;
-        //_meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-    }
-
-    void EnableCollider()
-    {
-        _collider.isTrigger = false;
-        _isColliderActive = true;
-        //_meshRenderer.shadowCastingMode = ShadowCastingMode.On;
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag(Tags.Light))
+        private Vector3 GetStateEdgeBetween(Vector3 a, Vector3 b)
         {
-            Debug.Log("Collision with light");
+            const float magnitudeThreshold = 0.1f;
+
+            while ((b - a).magnitude > magnitudeThreshold)
+            {
+                var c = (a + b) * 0.5f;
+                if (GetState(b) * GetState(c) < 0.5f)
+                {
+                    a = c;
+                }
+                else
+                {
+                    b = c;
+                }
+            }
+
+            return (a + b) * 0.5f;
         }
-    }
 
-    public void OnLight()
-    {
-        //Debug.Log("On light");
-        //_collider.enabled = false;
-        _isLighted = true;
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        //_isLighted = true;
-        if (other.gameObject.CompareTag(Tags.Light))
+        private float GetState(Vector3 worldPosition)
         {
-            Debug.Log("Collision with light");
+            var point = transform.InverseTransformPoint(worldPosition) + new Vector3(0.5f, 0.5f);
+            return _state2D.GetPixel((int)(point.x *_state2D.width), (int)(point.y * _state2D.height)).r;
         }
-    }
 
-    void OnTriggerExit(Collider other)
-    {
-        //_isLighted = false;
-    }
+        public bool OnBeamRayHit(RaycastHit hit, Vector3 rdir, float maxDistance, out Vector3 endPoint)
+        {
+            Debug.DrawRay(hit.point, rdir);
+            const int samples = 40;
 
-    public bool IsRaysCanPass()
-    {
-        return _state < RayPassThreshold;
+            var sampleSize = maxDistance / samples;
+            var p = hit.point;
+            var d = rdir.normalized * sampleSize;
+            for (var i = 0; i < samples; i++)
+            {
+                p += d;
+                if (GetState(p) > 0.8f)
+                {
+                    endPoint = p;
+                    return true;
+                }
+            }
+
+            endPoint = Vector3.zero;
+            return false;
+        }
     }
 }

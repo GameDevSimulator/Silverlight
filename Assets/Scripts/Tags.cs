@@ -10,5 +10,7 @@ namespace Assets.Scripts.Game
         public static string Light = "Light";
         public static string Darkness = "Darkness";
         public static string Reflector = "Reflector";
+        public static string LightAffector = "LightAffector";
+
     }
 }
