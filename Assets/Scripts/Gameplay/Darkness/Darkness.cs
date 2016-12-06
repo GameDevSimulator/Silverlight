@@ -10,7 +10,7 @@ namespace Assets.Scripts.Gameplay.Darkness
         public Material ComputationalMaterial;
         public float AngularDamping = 0.5f;
 
-        [Range(1f, 10f)]
+        [Range(1f, 20f)]
         public float Density = 1f;
         public bool ShowDebugState;
 
@@ -122,8 +122,12 @@ namespace Assets.Scripts.Gameplay.Darkness
 
                         // Slow dow rotation
                         body.angularVelocity *= AngularDamping;
-
-                        Debug.DrawRay(body.transform.position, body.velocity, Color.green);
+#if DEBUG
+                        if (ShowDebugState)
+                        {
+                            Debug.DrawRay(body.transform.position, body.velocity, Color.green);
+                        }
+#endif
                     }
                 }
             }
@@ -260,10 +264,14 @@ namespace Assets.Scripts.Gameplay.Darkness
                    body.velocity.magnitude * body.mass * 10);*/
 
                 var friction = -Density * body.velocity * state * Mathf.Sqrt(body.mass);
-                
 
-                Debug.DrawLine(sample, sample + antiGravityforce, Color.red);
-                Debug.DrawLine(sample, sample + friction, Color.blue);
+#if DEBUG
+                if (ShowDebugState)
+                {
+                    Debug.DrawLine(sample, sample + antiGravityforce, Color.red);
+                    Debug.DrawLine(sample, sample + friction, Color.blue);
+                }
+#endif
 
                 body.AddForceAtPosition(antiGravityforce + friction, sample, ForceMode.Force);
                 
