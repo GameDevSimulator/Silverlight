@@ -9,8 +9,9 @@ namespace Assets.Scripts.Gameplay.Darkness
     {
         public Material ComputationalMaterial;
         public float AngularDamping = 0.5f;
-        public float Friction = 0.9f;
-        public float VelocityDamping = 5f;
+
+        [Range(1f, 10f)]
+        public float Density = 1f;
         public bool ShowDebugState;
 
         //private MeshFilter _meshFilter;
@@ -56,7 +57,9 @@ namespace Assets.Scripts.Gameplay.Darkness
             _state2D = new Texture2D(_stateRenderTexture.width, _stateRenderTexture.height);
             _state2DRect = new Rect(0, 0, _state2D.width, _state2D.height);
 
-            _interactors.Add(GameManager.Instance.Player.GetComponentInChildren<DarknessInteractor>());
+            //_interactors.Add(GameManager.Instance.Player.GetComponentInChildren<DarknessInteractor>());
+            var fl = GameManager.Instance.Player.GetComponentInChildren<FlashLight>();
+            _interactors.Add(fl.GetComponent<DarknessInteractor>());
         }
 
         void FixedUpdate()
@@ -73,6 +76,56 @@ namespace Assets.Scripts.Gameplay.Darkness
 
                 // Update visuals from state
                 _meshRenderer.material.SetTexture(StateTextureName, _bufferRenderTexture);
+            }
+
+
+            foreach (var interactor in _interactors)
+            {
+                var body = interactor.GetComponent<Rigidbody>();
+                if (body != null)
+                {
+                    var forceFactorSum = 0f;
+                    
+                    foreach (var sample in interactor.Samples)
+                    {
+                        forceFactorSum += CalcForceFactor(
+                            interactor.transform.TransformPoint(sample.LocalPosition),
+                            interactor.transform.TransformDirection(-sample.Direction.normalized),
+                            Vector3.up);
+                    }
+                    
+                    forceFactorSum = Mathf.Max(forceFactorSum, 1f);
+
+                    if (forceFactorSum > 0)
+                    {
+                        var forceSum = 0f;
+                        foreach (var sample in interactor.Samples)
+                        {
+                            var factor = CalcForceFactor(
+                                interactor.transform.TransformPoint(sample.LocalPosition),
+                                interactor.transform.TransformDirection(-sample.Direction.normalized),
+                                Vector3.up);
+
+                            forceSum += SamplePhysicsAt(
+                                interactor.transform.TransformPoint(sample.LocalPosition), 
+                                body,
+                                factor / forceFactorSum,
+                                1f / interactor.Samples.Length
+                            );
+                        }
+
+                        if (forceSum > 0.1f)
+                        {
+                            interactor.gameObject.SendMessage("OnDarknessForceApplied", this,
+                                SendMessageOptions.DontRequireReceiver);
+                        }
+
+                        // Slow dow rotation
+                        body.angularVelocity *= AngularDamping;
+
+                        Debug.DrawRay(body.transform.position, body.velocity, Color.green);
+                    }
+                }
             }
         }
 
@@ -121,7 +174,7 @@ namespace Assets.Scripts.Gameplay.Darkness
             }
             GL.PopMatrix();
 
-            // TODO: OPTIMIZE PERFORMANCE BY C++ PLUGIN
+            // TODO: OPTIMIZE PERFORMANCE BY C++ PLUGIN OR COMPUTE SHADERS
             // TODO: REMOVE PIPELINE STALLING
             _state2D.ReadPixels(_state2DRect, 0, 0, false);
             _state2D.Apply();
@@ -161,63 +214,64 @@ namespace Assets.Scripts.Gameplay.Darkness
         void OnTriggerEnter(Collider col)
         {
             var interactor = col.GetComponent<DarknessInteractor>();
-            if (interactor != null)
+            if (interactor != null && !_interactors.Contains(interactor))
+            {
                 _interactors.Add(interactor);
+            }
         }
 
         void OnTriggerExit(Collider col)
         {
             var interactor = col.GetComponent<DarknessInteractor>();
-            if (interactor != null)
+            if (interactor != null && _interactors.Contains(interactor))
                 _interactors.Remove(interactor);
         }
 
         void OnTriggerStay(Collider col)
-        {
-            if (col.attachedRigidbody != null)
-            {
-                var sample = 0f;
-                sample += SamplePhysicsAt(col, 0.1f, 0.5f);
-                sample += SamplePhysicsAt(col, 0.9f, 0.5f);
-                if (sample > 0.1f)
-                {
-                    col.gameObject.SendMessage("OnDarknessForceApplied", this, SendMessageOptions.DontRequireReceiver);
-                }
-            }
+        {           
         }
 
-        private float SamplePhysicsAt(Collider col, float xFactor, float mod)
+        private Vector3 BottomEdgeOfCollider(Collider col, float xFactor)
         {
             var xpos = col.bounds.min.x + xFactor * col.bounds.size.x;
 
             RaycastHit hit;
             if (col.Raycast(new Ray(new Vector3(xpos, col.bounds.min.y - 1f), Vector3.up), out hit, 2f))
+                return hit.point;
+
+            return col.bounds.min;
+        }
+
+        private float CalcForceFactor(Vector3 at, Vector3 objectSurfaceNormal, Vector3 forceDirection)
+        {
+            return Mathf.Max(Vector3.Dot(forceDirection, objectSurfaceNormal), 0) * GetState(at);
+        }
+
+        private float SamplePhysicsAt(Vector3 sample, Rigidbody body, float gravityFactor, float frictionFactor)
+        {
+            const float threshold = 0.1f;
+            var state = GetState(sample);
+
+            if (state > threshold)
             {
-                //var center = new Vector3(xpos, col.bounds.max.y);
-                //var bottom = new Vector3(xpos, col.bounds.min.y);
-                var sample = hit.point;
-                //var h = (sample - center).magnitude / (bottom - center).magnitude;
-                //h = Mathf.Max(h, 1f);
+                var antiGravityforce = -Physics.gravity * body.mass * state * gravityFactor;
 
-                var forceFactor = GetState(sample);
+                /*var friction = Vector3.ClampMagnitude(-Density * body.velocity.normalized * body.velocity.sqrMagnitude * state, 
+                   body.velocity.magnitude * body.mass * 10);*/
 
-                if (forceFactor > 0.1f)
-                {
-                    //col.attachedRigidbody.AddForce(-col.attachedRigidbody.velocity * forceFactor, ForceMode.VelocityChange);
-                    //col.attachedRigidbody.velocity = col.attachedRigidbody.velocity*(1 - forceFactor);
+                var friction = -Density * body.velocity * state * Mathf.Sqrt(body.mass);
                 
-                    var uplift = -Physics.gravity * col.attachedRigidbody.mass * forceFactor - col.attachedRigidbody.velocity * VelocityDamping;
-                    var friction = new Vector3(-col.attachedRigidbody.velocity.x * Friction, 0);
-                    Debug.DrawLine(sample, sample + uplift, Color.red);
-                    col.attachedRigidbody.AddForceAtPosition(uplift * mod + friction * mod, sample);
-                    col.attachedRigidbody.angularVelocity *= AngularDamping;
-                }
 
+                Debug.DrawLine(sample, sample + antiGravityforce, Color.red);
+                Debug.DrawLine(sample, sample + friction, Color.blue);
 
-                return forceFactor;
+                body.AddForceAtPosition(antiGravityforce + friction, sample, ForceMode.Force);
+                
+                //body.AddForceAtPosition(antiGravityforce, sample, ForceMode.Force);
+                //body.AddForceAtPosition(friction, sample, ForceMode.Force);
             }
 
-            return 0f;
+            return state;
         }
 
         private Vector3 GetStateEdgeBetween(Vector3 a, Vector3 b)
@@ -243,6 +297,13 @@ namespace Assets.Scripts.Gameplay.Darkness
         private float GetState(Vector3 worldPosition)
         {
             var point = transform.InverseTransformPoint(worldPosition) + new Vector3(0.5f, 0.5f);
+
+            if (point.x < 0 || point.x > 1)
+                return 0;
+
+            if (point.y < 0 || point.y > 1)
+                return 0;
+
             return _state2D.GetPixel((int)(point.x *_state2D.width), (int)(point.y * _state2D.height)).r;
         }
 
