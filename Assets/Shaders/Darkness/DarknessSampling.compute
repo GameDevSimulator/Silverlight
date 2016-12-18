@@ -1,0 +1,29 @@
+﻿#pragma kernel CSSampling
+#define NUM_SAMPLES 50
+
+
+struct Sample
+{	
+	float2 at;
+	float value;
+};
+
+Texture2D<float4> StateTex;
+SamplerState samplerStateTex
+{
+    Filter   = MIN_MAG_MIP_LINEAR;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
+
+
+RWStructuredBuffer<Sample> SampleBuffer;
+
+[numthreads(NUM_SAMPLES,1,1)]
+void CSSampling (uint3 id : SV_DispatchThreadID)
+{		
+	float2 at = SampleBuffer[id.x].at;	
+
+	//SampleBuffer[id.x].value = StateTex[uint2(at.x, at.y)].r;	
+	SampleBuffer[id.x].value = StateTex.SampleLevel(samplerStateTex, at, 0).r;	
+}
