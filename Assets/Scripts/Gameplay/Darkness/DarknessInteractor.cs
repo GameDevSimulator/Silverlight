@@ -16,11 +16,13 @@ namespace Assets.Scripts.Gameplay.Darkness
         {
             MeshOnly,
             MeshWithColorData,
+            MaskedMesh,
         }
 
         public InteractionType Interaction;
         public ProcessingMode Mode;
         public DarknessSample[] Samples;
+        public Texture2D Mask;
 
         [Range(0f, 2f)] public float Outline = 0f;
 

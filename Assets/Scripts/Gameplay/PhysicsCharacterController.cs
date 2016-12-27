@@ -1,117 +1,229 @@
 ﻿using Assets.Scripts.Game;
+using Assets.Scripts.Gameplay.Darkness;
 using UnityEngine;
 
 namespace Assets.Scripts.Gameplay
 {
+    [RequireComponent(typeof(DarknessInteractor))]
     [RequireComponent(typeof(Rigidbody))]
-    [RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(CapsuleCollider))]
     public class PhysicsCharacterController : MonoBehaviour
     {
+        public float ForwardSpeed = 8.0f;
+        public float BackwardSpeed = 4.0f;
+        public float StrafeSpeed = 4.0f;
+        public float RunMultiplier = 2.0f;   // Speed when sprinting
+        public KeyCode RunKey = KeyCode.LeftShift;
+        public float JumpForce = 30f;
+        public float AirControlModifier = 0.7f;
+        public float GroundDrag = 5f;
+
+        public AnimationCurve SlopeCurveModifier = new AnimationCurve(new Keyframe(-90.0f, 1.0f), new Keyframe(0.0f, 1.0f), new Keyframe(90.0f, 0.0f));
+        public float ShellOffset; //reduce the radius by that ratio to avoid getting stuck in wall (a value of 0.1f is nice)
+        public float GroundCheckDistance = 0.01f; // distance for checking if the controller is grounded ( 0.01f seems to work best for this )
+        public float StickToGroundHelperDistance = 0.5f; // stops the character
+
+        [HideInInspector]
+        public float CurrentTargetSpeed = 8f;
+
+        public Vector3 Velocity
+        {
+            get { return _rigidBody.velocity; }
+        }
+
+        public bool Grounded
+        {
+            get { return _isGrounded; }
+        }
+
+        public bool Running
+        {
+            get { return _running; }
+        }
+
+        public bool Jumping
+        {
+            get { return _jumping; }
+        }
+
         private Rigidbody _rigidBody;
-        private bool _jumpRequested = false;
-        private Vector3 _dampVelocity;
+        private CapsuleCollider _capsule;
+        private DarknessInteractor _interactor;
+        private bool _running;
+        private bool _previouslyGrounded;
+        private bool _isGrounded;
+        private bool _jumping;
+        private bool _jump;
+        private Vector3 _groundContactNormal;
+        private bool _darknessForceApplied;
 
-        public float JumpForce = 200f;
-        public float MoveForce = 100f;
-
-        [Range(0f, 1f)]
-        public float InAirControlModifier = 0.5f;
-        public Vector3 MaxVelocity = new Vector3(2f, 10f, 2f);
-        public float GroundDampingTime = 0.1f;
-    
-        public Vector3 GroundTesterOffset;
-        public float GroundTesterRadius = 1f;
-
-        public bool IsGrounded { get; private set; }
-
-#if DEBUG
-        public bool ShowDebugInfo = false;
-#endif
-
-        private bool _isDarknessForceApplied;
-
-        void Start ()
+        void Start()
         {
             _rigidBody = GetComponent<Rigidbody>();
+            _capsule = GetComponent<CapsuleCollider>();
+            _interactor = GetComponent<DarknessInteractor>();
         }
-	
-        void FixedUpdate ()
+
+        void Update()
         {
-            IsGrounded = _isDarknessForceApplied;
-            _isDarknessForceApplied = false;
-            if (!IsGrounded)
+            if (Input.GetButtonDown("Jump") && !_jump)
             {
-                var colliders = Physics.OverlapSphere(transform.position + GroundTesterOffset, GroundTesterRadius);
-                foreach (var collider1 in colliders)
+                _jump = true;
+            }
+        }
+
+        void FixedUpdate()
+        {
+            var input = new Vector2
+            {
+                x = Input.GetAxis("Horizontal"),
+                y = Input.GetAxis("Vertical")
+            };
+            GroundCheck();
+            UpdateDesiredTargetSpeed(input);
+
+
+            if ((Mathf.Abs(input.x) > float.Epsilon || Mathf.Abs(input.y) > float.Epsilon))
+            {
+                // always move along the camera forward as it is the direction that it being aimed at
+                var desiredMove = transform.forward * input.y + transform.right * input.x;
+
+                desiredMove = Vector3.ProjectOnPlane(desiredMove, _groundContactNormal).normalized;
+
+                if (!_isGrounded)
+                    desiredMove *= AirControlModifier;
+
+                desiredMove.x = desiredMove.x * CurrentTargetSpeed;
+                desiredMove.z = desiredMove.z * CurrentTargetSpeed;
+                desiredMove.y = desiredMove.y * CurrentTargetSpeed;
+                if (_rigidBody.velocity.sqrMagnitude <
+                    (CurrentTargetSpeed * CurrentTargetSpeed))
                 {
-                    if (collider1.gameObject != this.gameObject && !collider1.isTrigger)
-                    {
-                        IsGrounded = true;
-                        break;
-                    }
+                    _rigidBody.AddForce(desiredMove * SlopeMultiplier(), ForceMode.Impulse);
                 }
             }
 
-            if (IsGrounded)
+            if (_isGrounded)
             {
-                if (_jumpRequested)
+                _rigidBody.drag = GroundDrag;
+
+                if (_jump)
                 {
-                    Debug.Log("JUMP!");
-                    _rigidBody.AddForce(0, JumpForce, 0);
-                    IsGrounded = false;
-                    _jumpRequested = false;
+                    _rigidBody.drag = 0f;
+                    _rigidBody.velocity = Vector3.ProjectOnPlane(_rigidBody.velocity, transform.up);
+                    //new Vector3(_rigidBody.velocity.x, 0f, _rigidBody.velocity.z);
+                    _rigidBody.AddForce(transform.up * JumpForce, ForceMode.Impulse);
+                    _jumping = true;
+                    SendMessage("OnJump", SendMessageOptions.DontRequireReceiver);
                 }
-            
-                /*
-            _rigidBody.velocity = Vector3.SmoothDamp(_rigidBody.velocity, Vector3.zero, ref _dampVelocity,
-                GroundDampingTime);*/
+
+                if (!_jumping && Mathf.Abs(input.x) < float.Epsilon && Mathf.Abs(input.y) < float.Epsilon && _rigidBody.velocity.magnitude < 1f)
+                {
+                    _rigidBody.Sleep();
+                }
             }
-
-            // clamp velocity
-            var velocity = _rigidBody.velocity;
-            velocity.x = Mathf.Clamp(velocity.x, -MaxVelocity.x, MaxVelocity.x);
-            velocity.y = Mathf.Clamp(velocity.y, -MaxVelocity.y, MaxVelocity.y);
-            velocity.z = Mathf.Clamp(velocity.z, -MaxVelocity.z, MaxVelocity.z);
-
-            _rigidBody.velocity = velocity;
-        }
-
-        public void Jump()
-        {
-            if(!_jumpRequested && IsGrounded)
-                _jumpRequested = true;
-        }
-
-        public void Move(float horizonatalInput)
-        {
-            var xInput = Mathf.Clamp(horizonatalInput, -1f, 1f);
-
-            if (!IsGrounded)
-                xInput *= InAirControlModifier;
-
-            _rigidBody.AddForce(Vector3.right * xInput * MoveForce * Time.deltaTime, ForceMode.Impulse);
-        }
-
-        public void OnDrawGizmosSelected()
-        {
-            Gizmos.DrawWireSphere(transform.position + GroundTesterOffset, GroundTesterRadius);
-        }
-
-        void OnDarknessForceApplied(Darkness.Darkness darkness)
-        {
-            _isDarknessForceApplied = true;
-        }
-
-#if DEBUG
-        void OnGUI()
-        {
-            if (ShowDebugInfo)
+            else
             {
-                GUI.TextField(new Rect(0, 0, 200, 20), string.Format("input: {0}", Input.GetAxis("Horizontal")));
-                GUI.TextField(new Rect(0, 25, 200, 20), string.Format("velocity: {0}", _rigidBody.velocity.ToString()));
-                GUI.TextField(new Rect(0, 50, 200, 20), string.Format("velocity: {0}", _rigidBody.velocity.magnitude));
+                _rigidBody.drag = 0f;
+                if (_previouslyGrounded && !_jumping)
+                {
+                    StickToGroundHelper();
+                }
+            }
+            _jump = false;
+            _darknessForceApplied = false;
+        }
+
+        public void UpdateDesiredTargetSpeed(Vector2 input)
+        {
+            if (input == Vector2.zero) return;
+            if (input.x > 0 || input.x < 0)
+            {
+                //strafe
+                CurrentTargetSpeed = StrafeSpeed;
+            }
+            if (input.y < 0)
+            {
+                //backwards
+                CurrentTargetSpeed = BackwardSpeed;
+            }
+            if (input.y > 0)
+            {
+                //forwards
+                //handled last as if strafing and moving forward at the same time forwards speed should take precedence
+                CurrentTargetSpeed = ForwardSpeed;
+            }
+
+            if (Input.GetKey(RunKey))
+            {
+                CurrentTargetSpeed *= RunMultiplier;
+                _running = true;
+            }
+            else
+            {
+                _running = false;
             }
         }
-#endif
+
+        /// sphere cast down just beyond the bottom of the capsule to see if the capsule is colliding round the bottom
+        private void GroundCheck()
+        {
+            _previouslyGrounded = _isGrounded;
+            var worldRadius = transform.lossyScale.x * _capsule.radius;
+            var worldHeight = transform.lossyScale.x * _capsule.height;
+            RaycastHit hitInfo;
+            if (Physics.SphereCast(_capsule.bounds.center, worldRadius * (1.0f - ShellOffset), -transform.up, out hitInfo,
+                                   ((worldHeight * 0.5f) - worldRadius) + GroundCheckDistance, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+            {
+                _isGrounded = true;
+                _groundContactNormal = hitInfo.normal;
+            }
+            else
+            {
+                _isGrounded = false;
+                _groundContactNormal = transform.up;
+            }
+
+            if (_darknessForceApplied)
+            {
+                _isGrounded = true;
+                _groundContactNormal = transform.up;
+            }
+
+            if (!_previouslyGrounded && _isGrounded && _jumping)
+            {
+                _jumping = false;
+                SendMessage("OnLand", SendMessageOptions.DontRequireReceiver);
+            }
+        }
+
+        private void StickToGroundHelper()
+        {
+            RaycastHit hitInfo;
+            if (Physics.SphereCast(transform.position, _capsule.radius * (1.0f - ShellOffset), -transform.up, out hitInfo,
+                                   (_capsule.height * 0.5f - _capsule.radius) +
+                                   StickToGroundHelperDistance, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+            {
+                if (Mathf.Abs(Vector3.Angle(hitInfo.normal, transform.up)) < 85f)
+                {
+                    _rigidBody.velocity = Vector3.ProjectOnPlane(_rigidBody.velocity, hitInfo.normal);
+                }
+            }
+        }
+
+        private float SlopeMultiplier()
+        {
+            var angle = Vector3.Angle(_groundContactNormal, transform.up);
+            return SlopeCurveModifier.Evaluate(angle);
+        }
+
+        void OnDarknessForceApplied(Vector3 darknessForce)
+        {
+            if (darknessForce.y > 0.01f)
+            {
+                _darknessForceApplied = true;
+            }
+        }
     }
 }
+

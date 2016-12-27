@@ -154,7 +154,7 @@ namespace Assets.Scripts.Gameplay.Darkness
 
                     if (forceFactorSum > 0)
                     {
-                        var forceSum = 0f;
+                        var forceSum = new Vector3();
 
                         idx = 0;
                         foreach (var sample in interactor.Samples)
@@ -176,9 +176,9 @@ namespace Assets.Scripts.Gameplay.Darkness
                             idx++;
                         }
 
-                        if (forceSum > 0.1f)
+                        if (forceSum.magnitude > 0.1f)
                         {
-                            interactor.gameObject.SendMessage("OnDarknessForceApplied", this,
+                            interactor.gameObject.SendMessage("OnDarknessForceApplied", forceSum,
                                 SendMessageOptions.DontRequireReceiver);
                         }
 
@@ -241,9 +241,6 @@ namespace Assets.Scripts.Gameplay.Darkness
                 }
             }
             GL.PopMatrix();
-
-
-          
         }
 
         private void RenderMesh(Transform t, Mesh mesh, DarknessInteractor.ProcessingMode mode)
@@ -307,7 +304,7 @@ namespace Assets.Scripts.Gameplay.Darkness
             return Mathf.Max(Vector3.Dot(forceDirection, objectSurfaceNormal), 0) * GetState(at, sampleId);
         }
 
-        private float SamplePhysicsAt(int sampleId, Vector3 sample, Rigidbody body, float gravityFactor, float frictionFactor)
+        private Vector3 SamplePhysicsAt(int sampleId, Vector3 sample, Rigidbody body, float gravityFactor, float frictionFactor)
         {
             const float threshold = 0.1f;
             var state = GetState(sample, sampleId);
@@ -329,13 +326,15 @@ namespace Assets.Scripts.Gameplay.Darkness
                 }
 #endif
 
-                body.AddForceAtPosition(antiGravityforce + friction, sample, ForceMode.Force);
-                
+                var force = antiGravityforce + friction;
+                body.AddForceAtPosition(force, sample, ForceMode.Force);
+                return force;
+
                 //body.AddForceAtPosition(antiGravityforce, sample, ForceMode.Force);
                 //body.AddForceAtPosition(friction, sample, ForceMode.Force);
             }
 
-            return state;
+            return Vector3.zero;
         }
 
         private Vector3 GetStateEdgeBetween(Vector3 a, Vector3 b)
