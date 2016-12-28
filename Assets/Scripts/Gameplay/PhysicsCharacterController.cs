@@ -1,5 +1,4 @@
-﻿using Assets.Scripts.Game;
-using Assets.Scripts.Gameplay.Darkness;
+﻿using Assets.Scripts.Gameplay.Darkness;
 using UnityEngine;
 
 namespace Assets.Scripts.Gameplay
@@ -15,7 +14,16 @@ namespace Assets.Scripts.Gameplay
         public float RunMultiplier = 2.0f;   // Speed when sprinting
         public KeyCode RunKey = KeyCode.LeftShift;
         public float JumpForce = 30f;
+
+        [Range(0f, 1f)]
         public float AirControlModifier = 0.7f;
+
+        [Range(0f, 1f)]
+        public float DarknessControlModifier = 0f;
+
+        [Range(0f, 1f)]
+        public float DarknessJumpModifier = 0f;
+
         public float GroundDrag = 5f;
 
         public AnimationCurve SlopeCurveModifier = new AnimationCurve(new Keyframe(-90.0f, 1.0f), new Keyframe(0.0f, 1.0f), new Keyframe(90.0f, 0.0f));
@@ -46,6 +54,8 @@ namespace Assets.Scripts.Gameplay
             get { return _jumping; }
         }
 
+        public bool AcceptInput = true;
+
         private Rigidbody _rigidBody;
         private CapsuleCollider _capsule;
         private DarknessInteractor _interactor;
@@ -55,7 +65,11 @@ namespace Assets.Scripts.Gameplay
         private bool _jumping;
         private bool _jump;
         private Vector3 _groundContactNormal;
-        private bool _darknessForceApplied;
+
+        public const int GroundSample = 0;
+        public const int LeftSample = 3;
+        public const int RightSample = 2;
+        public const int TopSample = 1;
 
         void Start()
         {
@@ -66,19 +80,26 @@ namespace Assets.Scripts.Gameplay
 
         void Update()
         {
-            if (Input.GetButtonDown("Jump") && !_jump)
+            if (AcceptInput && Input.GetButtonDown("Jump") && !_jump)
             {
                 _jump = true;
             }
         }
 
+        public void Move(Vector2 input)
+        {
+            UpdateDesiredTargetSpeed(input);
+        }
+
         void FixedUpdate()
         {
-            var input = new Vector2
+            var input = new Vector2();
+            if (AcceptInput)
             {
-                x = Input.GetAxis("Horizontal"),
-                y = Input.GetAxis("Vertical")
-            };
+                input.x = Input.GetAxis("Horizontal");
+                input.y = Input.GetAxis("Vertical");
+            }
+
             GroundCheck();
             UpdateDesiredTargetSpeed(input);
 
@@ -92,6 +113,11 @@ namespace Assets.Scripts.Gameplay
 
                 if (!_isGrounded)
                     desiredMove *= AirControlModifier;
+
+                if(desiredMove.x < 0)
+                    desiredMove *= (1f - Mathf.Clamp01((1f - DarknessControlModifier) * LeftSampleState()));
+                else
+                    desiredMove *= (1f - Mathf.Clamp01((1f - DarknessControlModifier) * RightSampleState()));
 
                 desiredMove.x = desiredMove.x * CurrentTargetSpeed;
                 desiredMove.z = desiredMove.z * CurrentTargetSpeed;
@@ -112,7 +138,7 @@ namespace Assets.Scripts.Gameplay
                     _rigidBody.drag = 0f;
                     _rigidBody.velocity = Vector3.ProjectOnPlane(_rigidBody.velocity, transform.up);
                     //new Vector3(_rigidBody.velocity.x, 0f, _rigidBody.velocity.z);
-                    _rigidBody.AddForce(transform.up * JumpForce, ForceMode.Impulse);
+                    _rigidBody.AddForce(transform.up * JumpForce * (1f - Mathf.Clamp01((1f - DarknessJumpModifier) * GroundSampleState())), ForceMode.Impulse);
                     _jumping = true;
                     SendMessage("OnJump", SendMessageOptions.DontRequireReceiver);
                 }
@@ -131,7 +157,6 @@ namespace Assets.Scripts.Gameplay
                 }
             }
             _jump = false;
-            _darknessForceApplied = false;
         }
 
         public void UpdateDesiredTargetSpeed(Vector2 input)
@@ -184,7 +209,7 @@ namespace Assets.Scripts.Gameplay
                 _groundContactNormal = transform.up;
             }
 
-            if (_darknessForceApplied)
+            if (GroundSampleState() > 0.5f)
             {
                 _isGrounded = true;
                 _groundContactNormal = transform.up;
@@ -217,12 +242,19 @@ namespace Assets.Scripts.Gameplay
             return SlopeCurveModifier.Evaluate(angle);
         }
 
-        void OnDarknessForceApplied(Vector3 darknessForce)
+        private float GroundSampleState()
         {
-            if (darknessForce.y > 0.01f)
-            {
-                _darknessForceApplied = true;
-            }
+            return _interactor.Samples[GroundSample].LastState;
+        }
+
+        private float LeftSampleState()
+        {
+            return _interactor.Samples[LeftSample].LastState;
+        }
+
+        private float RightSampleState()
+        {
+            return _interactor.Samples[RightSample].LastState;
         }
     }
 }

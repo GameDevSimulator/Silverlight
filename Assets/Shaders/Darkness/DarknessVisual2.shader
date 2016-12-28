@@ -8,7 +8,7 @@
 	}
 	SubShader {
 		Lighting Off
-		Tags{ "Queue" = "Transparent+1"  "RenderType" = "Transparent" }
+		Tags{ "Queue" = "Transparent+1"  "RenderType" = "Transparent" "PreviewType" = "Plane" }
 		Blend SrcAlpha OneMinusSrcAlpha
 		ZWrite Off
 		LOD 200

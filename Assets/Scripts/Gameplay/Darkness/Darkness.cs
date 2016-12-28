@@ -127,6 +127,7 @@ namespace Assets.Scripts.Gameplay.Darkness
                 _meshRenderer.material.SetTexture(StateTextureName, _bufferRenderTexture);
             }
 
+
             var interactorSampleId = 1;
             foreach (var interactor in _interactors)
             {
@@ -154,18 +155,17 @@ namespace Assets.Scripts.Gameplay.Darkness
 
                     if (forceFactorSum > 0)
                     {
-                        var forceSum = new Vector3();
-
                         idx = 0;
-                        foreach (var sample in interactor.Samples)
+                        for (var i = 0; i < interactor.Samples.Length; i++)
                         {
+                            var sample = interactor.Samples[i];
                             var factor = CalcForceFactor(
                                 interactorSampleId + idx,
                                 interactor.transform.TransformPoint(sample.LocalPosition),
                                 interactor.transform.TransformDirection(-sample.Direction.normalized),
                                 Vector3.up);
 
-                            forceSum += SamplePhysicsAt
+                            var state = SamplePhysicsAt
                                 (interactorSampleId + idx,
                                 interactor.transform.TransformPoint(sample.LocalPosition), 
                                 body,
@@ -174,14 +174,9 @@ namespace Assets.Scripts.Gameplay.Darkness
                             );
 
                             idx++;
+                            interactor.Samples[i].LastState = state;
                         }
-
-                        if (forceSum.magnitude > 0.1f)
-                        {
-                            interactor.gameObject.SendMessage("OnDarknessForceApplied", forceSum,
-                                SendMessageOptions.DontRequireReceiver);
-                        }
-
+                        
                         // Slow dow rotation
                         body.angularVelocity *= AngularDamping;
 #if DEBUG
@@ -200,11 +195,12 @@ namespace Assets.Scripts.Gameplay.Darkness
         private void RenderState(Texture source, RenderTexture dest)
         {
             Graphics.SetRenderTarget(dest);
-            GL.Clear(false, false, Color.black);
+            GL.Clear(true, true, Color.black);
             GL.PushMatrix();
             _materialInstance.SetTexture("_MainTex", source);
             _materialInstance.SetPass(1);
             GL.LoadOrtho();
+            
             GL.Begin(GL.QUADS);
             GL.Color(Color.white);
 
@@ -224,38 +220,8 @@ namespace Assets.Scripts.Gameplay.Darkness
             GL.End();
         
             foreach (var interactor in _interactors)
-            {
-                if (interactor.Interaction == DarknessInteractor.InteractionType.Dark)
-                {
-                    _materialInstance.SetPass(3);
-                    _materialInstance.SetFloat("_Outline", interactor.Outline);
-                    RenderMesh(interactor.transform, interactor.GetMesh(), interactor.Mode);
-                }
-
-
-                if (interactor.Interaction == DarknessInteractor.InteractionType.Light)
-                {
-                    _materialInstance.SetPass(2);
-                    _materialInstance.SetFloat("_Outline", interactor.Outline);
-                    RenderMesh(interactor.transform, interactor.GetMesh(), interactor.Mode);
-                }
-            }
+                interactor.DrawMesh(transform);
             GL.PopMatrix();
-        }
-
-        private void RenderMesh(Transform t, Mesh mesh, DarknessInteractor.ProcessingMode mode)
-        {
-            GL.Begin(GL.TRIANGLES);
-            foreach (var index in mesh.triangles)
-            {
-                var v = mesh.vertices[index];
-                v = WorldToUv(t.TransformPoint(v));
-                //GL.TexCoord(mesh.uv[mesh.triangles[i]]);
-                if(mode == DarknessInteractor.ProcessingMode.MeshWithColorData && mesh.colors.Length > 0)
-                    GL.Color(mesh.colors32[index]);
-                GL.Vertex3(v.x, v.y, v.z + 0.1f);
-            }
-            GL.End();
         }
 
         void OnGUI()
@@ -304,7 +270,7 @@ namespace Assets.Scripts.Gameplay.Darkness
             return Mathf.Max(Vector3.Dot(forceDirection, objectSurfaceNormal), 0) * GetState(at, sampleId);
         }
 
-        private Vector3 SamplePhysicsAt(int sampleId, Vector3 sample, Rigidbody body, float gravityFactor, float frictionFactor)
+        private float SamplePhysicsAt(int sampleId, Vector3 sample, Rigidbody body, float gravityFactor, float frictionFactor)
         {
             const float threshold = 0.1f;
             var state = GetState(sample, sampleId);
@@ -328,33 +294,12 @@ namespace Assets.Scripts.Gameplay.Darkness
 
                 var force = antiGravityforce + friction;
                 body.AddForceAtPosition(force, sample, ForceMode.Force);
-                return force;
 
                 //body.AddForceAtPosition(antiGravityforce, sample, ForceMode.Force);
                 //body.AddForceAtPosition(friction, sample, ForceMode.Force);
             }
 
-            return Vector3.zero;
-        }
-
-        private Vector3 GetStateEdgeBetween(Vector3 a, Vector3 b)
-        {
-            const float magnitudeThreshold = 0.1f;
-
-            while ((b - a).magnitude > magnitudeThreshold)
-            {
-                var c = (a + b) * 0.5f;
-                if (GetState(b) * GetState(c) < 0.5f)
-                {
-                    a = c;
-                }
-                else
-                {
-                    b = c;
-                }
-            }
-
-            return (a + b) * 0.5f;
+            return state;
         }
 
         private float GetState(Vector3 worldPosition, int sampleId = 0)
