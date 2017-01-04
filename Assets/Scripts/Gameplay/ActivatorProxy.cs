@@ -51,7 +51,7 @@ public class ActivatorProxy : MonoBehaviour
     // Coming from SendMessage
     void OnActivate()
     {
-		Debug.LogWarning ("OnActivate message");
+		Debug.Log("OnActivate message");
         if (HoldActivation)
         {
             _counter++;

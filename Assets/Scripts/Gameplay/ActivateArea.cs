@@ -7,55 +7,40 @@ public class ActivateArea : MonoBehaviour
 {
 	public GameObject[] Targets;
 
-	//private int _playersTriggered = 0;
-
-	private float _currentState = 0f;
-	private Vector3 _initialPosition;
-	private Vector3 _pressedPosition;
-
-	string message = "";
-	bool InTrigger = false;
-	public bool IsActivated { get; private set; }
+	string _message = "";
+	bool _inTrigger = false;
 
 	void Start ()
 	{
-		//_initialPosition = transform.position;
-		//_pressedPosition = transform.position + Vector3.up*PressDepth;
-		IsActivated = false;
-
-	//		if (!GetComponent<Collider>().isTrigger)
-	//			Debug.LogWarning("Button collider must be a trigger", this);
 	}
 
 	void Update ()
 	{
-		if (Input.GetButtonDown ("Activate") && InTrigger == true) {
-			//Debug.LogWarning ("E pressed");
-			IsActivated = true;
-			foreach (var target in Targets) {
-				target.SendMessage (ActivatorProxy.ActivateEvent);
-				}
+		if (Input.GetButtonDown ("Activate") && _inTrigger == true) 
+		{
+			foreach (var target in Targets) 
+			{
+				target.SendMessage(ActivatorProxy.ActivateEvent);
 			}
-			
+		}			
 	}
 
 	void OnTriggerEnter(Collider col)
 	{
 		Debug.LogWarning ("Trigger entered", this);
-		message = "Press E to open";
-		InTrigger = true;
+		_message = "Press E to open";
+		_inTrigger = true;
 	}
 
 	void OnTriggerExit(Collider col)
 	{
 		Debug.LogWarning ("Trigger exited", this);
-		message = "";
-		InTrigger = false;
+		_message = "";
+		_inTrigger = false;
 	}
 
-	void OnGUI(){
-		GUI.Label (new Rect (300, 300, 200, 200), message);
-	}
-
-		
+	void OnGUI()
+	{
+		GUI.Label (new Rect (300, 300, 200, 200), _message);
+	}		
 }
