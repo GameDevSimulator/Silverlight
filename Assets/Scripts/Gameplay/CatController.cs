@@ -5,10 +5,6 @@ using Assets.Scripts.Gameplay;
 [RequireComponent(typeof(PhysicsCharacterController))]
 public class CatController : MonoBehaviour
 {
-    public float Speed = 1f;
-    public float JumpSpeed = 10f;
-    public float Gravity = 20.0F;
-
     private PhysicsCharacterController _controller;
 
     void Awake()
@@ -25,12 +21,13 @@ public class CatController : MonoBehaviour
     {
         if(GameManager.Instance.CurrentControllableCharacter == Character.Cat)
         {
-
-            if (Input.GetButtonDown("Jump"))
-            {
-                //_controller.Jump();
-            }
-            //_controller.Move(Input.GetAxis("Horizontal"));
+            if (!_controller.AcceptInput)
+                _controller.AcceptInput = true;
+        }
+        else
+        {
+            if (_controller.AcceptInput)
+                _controller.AcceptInput = false;
         }
     }
     

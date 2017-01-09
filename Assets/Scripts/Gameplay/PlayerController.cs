@@ -22,17 +22,13 @@ public class PlayerController : MonoBehaviour
     {
         if (GameManager.Instance.CurrentControllableCharacter == Character.Boy)
         {
-            if (Input.GetMouseButtonDown(0)) //фонарик
-            {
-                //FlashlightObject.SetActive(!FlashlightObject.gameObject.activeSelf);
-            }
-
-            if (Input.GetButtonDown("Jump"))
-            {
-                //_controller.Jump();
-            }
-            
-            //_controller.Move(Input.GetAxis("Horizontal"));
+            if (!_controller.AcceptInput)
+                _controller.AcceptInput = true;
+        }
+        else
+        {
+            if (_controller.AcceptInput)
+                _controller.AcceptInput = false;
         }
     }
 

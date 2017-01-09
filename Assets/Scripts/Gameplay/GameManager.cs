@@ -15,7 +15,7 @@ public class GameManager : Singleton<GameManager>
     {
     }
 
-    public void Respawn () //респаун
+    public void Respawn()
     {
         CurrentControllableCharacter = Character.Boy;
         Player.transform.position = PlayerSpawnPoint.transform.position;
@@ -38,7 +38,7 @@ public class GameManager : Singleton<GameManager>
 
     void Update()
     {
-        if (Input.GetKeyDown("f"))//
+        if (Input.GetButtonDown("Switch"))
         {
             SwitchCharacter();
             Debug.Log(string.Format("Character switched to {0}", CurrentControllableCharacter));

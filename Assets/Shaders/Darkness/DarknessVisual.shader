@@ -10,7 +10,7 @@
 		_WaveSize("Wave Size", Range(0.1, 4)) = 0.5
 	}
 	SubShader {
-		Tags{ "Queue" = "Transparent+1"  "RenderType" = "Transparent"  }
+		Tags{ "Queue" = "Transparent+1"  "RenderType" = "Transparent" "PreviewType" = "Plane" }
 		Blend SrcAlpha OneMinusSrcAlpha		
 		ZWrite Off
 		
