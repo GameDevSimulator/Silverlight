@@ -29,10 +29,10 @@ public class PlayerController : MonoBehaviour
 
             if (Input.GetButtonDown("Jump"))
             {
-                _controller.Jump();
+                //_controller.Jump();
             }
             
-            _controller.Move(Input.GetAxis("Horizontal"));
+            //_controller.Move(Input.GetAxis("Horizontal"));
         }
     }
 
