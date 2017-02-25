@@ -16,7 +16,7 @@ public class ActivateArea : MonoBehaviour
 
 	void Update ()
 	{
-		if (Input.GetButtonDown ("Activate") && _inTrigger == true) 
+		if (Input.GetButtonDown ("Activate") && _inTrigger == true && GameManager.Instance.CurrentControllableCharacter == Character.Boy) 
 		{
 			foreach (var target in Targets) 
 			{
@@ -41,6 +41,9 @@ public class ActivateArea : MonoBehaviour
 
 	void OnGUI()
 	{
-		GUI.Label (new Rect (300, 300, 200, 200), _message);
+        if (GameManager.Instance.CurrentControllableCharacter == Character.Boy)
+        {
+            GUI.Label(new Rect(300, 300, 200, 200), _message);
+        }
 	}		
 }
