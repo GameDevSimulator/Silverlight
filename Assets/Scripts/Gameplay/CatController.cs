@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Assets.Scripts;
 using Assets.Scripts.Gameplay;
 
 [RequireComponent(typeof(PhysicsCharacterController))]
@@ -19,7 +20,7 @@ public class CatController : MonoBehaviour
 
     void Update ()
     {
-        if(GameManager.Instance.CurrentControllableCharacter == Character.Cat)
+        if(GameManager.Instance.CurrentControllableCharacter == WellKnown.Character.Cat)
         {
             if (!_controller.AcceptInput)
                 _controller.AcceptInput = true;

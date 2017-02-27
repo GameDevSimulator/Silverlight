@@ -1,42 +1,40 @@
-﻿using Assets.Scripts.Gameplay;
-using UnityEngine;
+﻿using UnityEngine;
 
-[RequireComponent(typeof(PhysicsCharacterController))]
-public class PlayerController : MonoBehaviour
+namespace Assets.Scripts.Gameplay
 {
-    public GameObject FlashlightObject;
-
-    private PhysicsCharacterController _controller;
-
-    void Awake()
+    [RequireComponent(typeof(CharacterMovement))]
+    public class PlayerController : MonoBehaviour
     {
-        GameManager.Instance.Player = this;
-    }
+        private CharacterMovement _movement;
 
-    void Start ()
-    {
-        _controller = GetComponent<PhysicsCharacterController>();
-    }
-
-    void Update ()
-    {
-        if (GameManager.Instance.CurrentControllableCharacter == Character.Boy)
+        void Awake()
         {
-            if (!_controller.AcceptInput)
-                _controller.AcceptInput = true;
+            GameManager.Instance.Player = this;
         }
-        else
-        {
-            if (_controller.AcceptInput)
-                _controller.AcceptInput = false;
-        }
-    }
 
-    void OnTriggerEnter (Collider col) //вызов метода респаун в GameManager
-    {
-        if(col.transform.tag == "Spikes")
+        void Start()
         {
-            GameManager.Instance.Respawn();
+            _movement = GetComponent<CharacterMovement>();
+        }
+
+        void Update()
+        {
+            if (GameManager.Instance.CurrentControllableCharacter == WellKnown.Character.Boy)
+            {
+                if (!_movement.IsControllable)
+                    _movement.Activate();
+            }
+            else
+            {
+                if (_movement.IsControllable)
+                    _movement.Deactivate();
+            }
+        }
+
+        void OnTriggerEnter(Collider col)
+        {
+            if(col.CompareTag(WellKnown.Tags.Spikes))
+                GameManager.Instance.Respawn();
         }
     }
 }

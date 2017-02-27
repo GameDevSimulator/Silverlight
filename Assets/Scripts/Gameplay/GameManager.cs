@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Assets.Scripts;
+using Assets.Scripts.Gameplay;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -9,7 +11,7 @@ public class GameManager : Singleton<GameManager>
     public GameObject СatSpawnPoint;
     public GameObject Fader;
 
-    public Character CurrentControllableCharacter;//{ get; private set; }
+    public WellKnown.Character CurrentControllableCharacter;//{ get; private set; }
 
     void Awake()
     {
@@ -17,7 +19,7 @@ public class GameManager : Singleton<GameManager>
 
     public void Respawn()
     {
-        CurrentControllableCharacter = Character.Boy;
+        CurrentControllableCharacter = WellKnown.Character.Boy;
         Player.transform.position = PlayerSpawnPoint.transform.position;
         Cat.transform.position = СatSpawnPoint.transform.position;
         Fader.GetComponent<SceneFadeInOut>().EndScene();
@@ -27,21 +29,21 @@ public class GameManager : Singleton<GameManager>
     {
         switch (CurrentControllableCharacter)
         {
-            case Character.Boy:
-                CurrentControllableCharacter = Character.Cat;
+            case WellKnown.Character.Boy:
+                CurrentControllableCharacter = WellKnown.Character.Cat;
                 break;
-            case Character.Cat:
-                CurrentControllableCharacter = Character.Boy;
+            case WellKnown.Character.Cat:
+                CurrentControllableCharacter = WellKnown.Character.Boy;
                 break;
         }
     }
 
     void Update()
     {
-        if (Input.GetButtonDown("Switch"))
+        if (Input.GetButtonDown(WellKnown.Buttons.Switch))
         {
             SwitchCharacter();
-            Debug.Log(string.Format("Character switched to {0}", CurrentControllableCharacter));
+            Debug.LogFormat("Character switched to {0}", CurrentControllableCharacter);
         }
     }
 }

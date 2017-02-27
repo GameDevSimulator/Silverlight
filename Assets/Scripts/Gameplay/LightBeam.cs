@@ -227,7 +227,7 @@ namespace Assets.Scripts.Gameplay
                 result.Collided = true;
                 result.Distance = (result.Point - origin).magnitude;
 
-                if (hit.collider.CompareTag(Tags.Darkness))
+                if (hit.collider.CompareTag(WellKnown.Tags.Darkness))
                 {
                     //result.Collided = false;
                     var darkness = hit.collider.gameObject.GetComponent<Darkness.Darkness>();
