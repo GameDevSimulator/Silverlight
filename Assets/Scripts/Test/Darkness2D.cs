@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Assets.Scripts.Utility;
 using UnityEngine;
 using ClipperLib;
 
@@ -13,7 +14,7 @@ namespace Assets.Scripts.Test
 
         private float _scale = 100f;
 
-        void Start ()
+        void Start()
         {
             _collider = GetComponent<PolygonCollider2D>();
 
@@ -22,7 +23,7 @@ namespace Assets.Scripts.Test
             AddColliderToClipper(clipper, LightCollider, PolyType.ptClip);
 
             var solution = new List<List<IntPoint>>();
-            if (clipper.Execute(ClipType.ctXor, solution))
+            if (clipper.Execute(ClipType.ctDifference, solution))
             {
                 Debug.Log("CLIP SUCCEED");
                 Debug.Log(solution[0].Count);
@@ -49,15 +50,15 @@ namespace Assets.Scripts.Test
             return points;
         }
 
-        void AddColliderToClipper(Clipper clipper, PolygonCollider2D collider, PolyType polyType)
+        void AddColliderToClipper(Clipper clipper, PolygonCollider2D col, PolyType polyType)
         {
-            for (var i = 0; i < collider.pathCount; i++)
+            for (var i = 0; i < col.pathCount; i++)
             {
-                var pointsRaw = _collider.GetPath(i);
+                var pointsRaw = col.GetPath(i);
                 var points = new IntPoint[pointsRaw.Length];
                 for (var j = 0; j < pointsRaw.Length; j++)
                 {
-                    var t = collider.transform.TransformPoint(pointsRaw[j]) * _scale;
+                    var t = col.transform.TransformPoint(pointsRaw[j]) * _scale;
                     points[j].X = (int)(t.x);
                     points[j].Y = (int)(t.y);
                 }
@@ -65,7 +66,7 @@ namespace Assets.Scripts.Test
             }
         }
 
-        void ColliderFromSolution(PolygonCollider2D collider, List<List<IntPoint>> solution)
+        void ColliderFromSolution(PolygonCollider2D col, List<List<IntPoint>> solution)
         {
             var pathIndex = 0;
             foreach (var path in solution)
@@ -75,12 +76,20 @@ namespace Assets.Scripts.Test
                 for (var i = 0; i < path.Count; i++)
                 {
                     var t = new Vector2(path[i].X, path[i].Y);
-                    t = collider.transform.InverseTransformPoint(t / _scale);
+                    t = col.transform.InverseTransformPoint(t / _scale);
                     points[i].x = t.x;
                     points[i].y = t.y;
                 }
+                
+                col.SetPath(pathIndex, points);
+            }
+        }
 
-                collider.SetPath(pathIndex, points);
+        void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (collision.CompareTag(WellKnown.Tags.Light))
+            {
+                Debug.LogFormat("Trigger in darkness with {0}", collision.gameObject);
             }
         }
     }
