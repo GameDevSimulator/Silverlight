@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -51,10 +52,10 @@ namespace Assets.Scripts.Gameplay.Darkness
 
         public ComputeShader Compute;
 
-        public const float PixelsPerUnit = 48;
+        public const float PixelsPerUnit = 64;
         public const string ShaderName = "Darkness/Area";
         private static readonly Matrix4x4 QuadOffset 
-            = Matrix4x4.TRS(new Vector3(0.5f, 0.5f, 0f), Quaternion.identity, Vector3.one);
+            = Matrix4x4.TRS(new Vector3(0.5f, 0.5f, -5f), Quaternion.identity, Vector3.one);
 
         private readonly List<DarknessInteractor> _interactors = new List<DarknessInteractor>();
         private MeshRenderer _renderer;
@@ -116,16 +117,22 @@ namespace Assets.Scripts.Gameplay.Darkness
             _compute.SetBuffer(_kernel, "CollisionInfoBuffer", _computeBuffer);
 
             AddIntersectedInteractors();
-            //AddInteractor(GameManager.Instance.Player.FlashLight.GetComponent<DarknessInteractor>());
+            StartCoroutine(RebuildCommandBufferCoroutine(1f));
+        }
+
+        IEnumerator RebuildCommandBufferCoroutine(float wait)
+        {
+            yield return new WaitForSeconds(wait);
+            RebuildCommandBuffer();
         }
 
         void AddIntersectedInteractors()
         {
             var col = GetComponent<Collider>();
-            var colliders = Physics.OverlapBox(col.bounds.center, col.bounds.extents*0.5f);
+            var colliders = Physics.OverlapBox(col.bounds.center, col.bounds.extents, transform.rotation);
             foreach (var interactorCol in colliders)
             {
-                AddInteractor(interactorCol.GetComponent<DarknessInteractor>());
+                AddInteractor(interactorCol.GetComponent<DarknessInteractor>(), rebuild: false);
             }
         }
 
@@ -197,8 +204,6 @@ namespace Assets.Scripts.Gameplay.Darkness
                 if (interactor.Renderer != null)
                     _commandsBuffer.DrawRenderer(interactor.Renderer, interactor.InteractionMaterial);
             }
-
-            //_commandsBuffer.Blit(_target, _texture);
         }
 
         void GpuCompute()
@@ -218,12 +223,14 @@ namespace Assets.Scripts.Gameplay.Darkness
             _visible = false;
         }
 
-        public void AddInteractor(DarknessInteractor interactor)
+        public void AddInteractor(DarknessInteractor interactor, bool rebuild=true)
         {
             if (interactor != null && !_interactors.Contains(interactor))
             {
                 _interactors.Add(interactor);
-                RebuildCommandBuffer();
+
+                if(rebuild)
+                    RebuildCommandBuffer();
             }
         }
 
