@@ -64,10 +64,12 @@ namespace Assets.Scripts.Gameplay.Darkness
         private CommandBuffer _commandsBuffer;
 
         // Compute stuff
-        private const int ThreadsPerGroupX = 8;
-        private const int ThreadsPerGroupY = 8;
+        private uint _threadsPerGroupX;
+        private uint _threadsPerGroupY;
+        private uint _threadsPerGroupZ;
         private readonly CollisionInfo[] _collisions = new CollisionInfo[256];
         private readonly DarknessCollision[] _collisions2 = new DarknessCollision[256];
+        private ComputeShader _compute;
         private ComputeBuffer _computeBuffer;
         private int _kernel;
 
@@ -75,9 +77,16 @@ namespace Assets.Scripts.Gameplay.Darkness
         void Start ()
         {
             _renderer = GetComponent<MeshRenderer>();
-            
-            var width = ((int)(transform.lossyScale.x * PixelsPerUnit) / ThreadsPerGroupX) * ThreadsPerGroupX;
-            var height =((int)(transform.lossyScale.y * PixelsPerUnit) / ThreadsPerGroupY) * ThreadsPerGroupY;
+
+            // COMPUTE SHADER
+            //_compute = Instantiate(Compute);
+            _compute = ComputeShader.Instantiate(Compute);
+
+            _kernel = _compute.FindKernel("CSCollision");
+            Compute.GetKernelThreadGroupSizes(_kernel, out _threadsPerGroupX, out _threadsPerGroupY, out _threadsPerGroupZ);
+
+            var width = (int)(((int)(transform.lossyScale.x * PixelsPerUnit) / _threadsPerGroupX) * _threadsPerGroupX);
+            var height = (int)(((int)(transform.lossyScale.y * PixelsPerUnit) / _threadsPerGroupY) * _threadsPerGroupY);
 
             _target = new RenderTexture(
                 width,
@@ -101,11 +110,10 @@ namespace Assets.Scripts.Gameplay.Darkness
             _commandsBuffer = new CommandBuffer { name = "Darkness Command Buffer" };
             //_camera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, _commandsBuffer);
 
-            // COMPUTE SHADER
-            _kernel = Compute.FindKernel("CSCollision");
+            
             _computeBuffer = new ComputeBuffer(_collisions.Length, ImagePhysics.ObjectCollisionInfo.Size);
-            Compute.SetTexture(_kernel, "StateTex", _target);
-            Compute.SetBuffer(_kernel, "CollisionInfoBuffer", _computeBuffer);
+            _compute.SetTexture(_kernel, "StateTex", _target);
+            _compute.SetBuffer(_kernel, "CollisionInfoBuffer", _computeBuffer);
 
             AddIntersectedInteractors();
             //AddInteractor(GameManager.Instance.Player.FlashLight.GetComponent<DarknessInteractor>());
@@ -135,6 +143,7 @@ namespace Assets.Scripts.Gameplay.Darkness
             if (_visible)
             {
                 _computeBuffer.GetData(_collisions);
+
                 foreach (var interactor in _interactors)
                 {
                     if (interactor.Interaction == DarknessInteractor.InteractionType.PhysicsOnly)
@@ -196,7 +205,7 @@ namespace Assets.Scripts.Gameplay.Darkness
         {
             Array.Clear(_collisions, 0, _collisions.Length);
             _computeBuffer.SetData(_collisions);
-            Compute.Dispatch(_kernel, _target.width / ThreadsPerGroupX, _target.height / ThreadsPerGroupY, 1);
+            _compute.Dispatch(_kernel, _target.width / (int)_threadsPerGroupX, _target.height / (int)_threadsPerGroupY, 1);
         }
 
         void OnBecameVisible()

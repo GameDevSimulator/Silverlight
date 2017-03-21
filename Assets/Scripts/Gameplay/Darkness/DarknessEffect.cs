@@ -22,7 +22,7 @@ namespace Assets.Scripts.Gameplay.Darkness
 
         void Start ()
         {
-            _camera = GetComponent<Camera>();
+            _camera = Camera.main;
 
             // Half sized render texture with 16bit depth buffer
             _target = new RenderTexture(
@@ -45,6 +45,7 @@ namespace Assets.Scripts.Gameplay.Darkness
             _depthCamera = _depthCameraObj.AddComponent<Camera>();
             _depthCamera.enabled = false;
             _depthCamera.aspect = _camera.aspect;
+            _depthCamera.projectionMatrix = _camera.projectionMatrix;
             _depthCamera.targetTexture = _target;
             _depthCamera.cullingMask = _camera.cullingMask; // default layer for now
             _depthCamera.clearFlags = CameraClearFlags.Nothing;
@@ -56,6 +57,7 @@ namespace Assets.Scripts.Gameplay.Darkness
             _darknessCamera = _darknessCameraObj.AddComponent<Camera>();
             _darknessCamera.enabled = false;
             _darknessCamera.aspect = _camera.aspect;
+            _darknessCamera.projectionMatrix = _camera.projectionMatrix;
             _darknessCamera.targetTexture = _target;
             _darknessCamera.cullingMask = LayerMask.GetMask(WellKnown.LayerNames.Darkness, WellKnown.LayerNames.DrawableDarkness);
             _darknessCamera.clearFlags = CameraClearFlags.Nothing;
