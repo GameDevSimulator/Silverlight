@@ -1,4 +1,4 @@
-﻿Shader "Custom/LightVisual" {
+﻿Shader "Custom/LightMesh" {
 	Properties{
 		_MainTex("Main tex", 2D) = "white"{}
 		_Color("Main color", Color) = (1.0, 1.0, 1.0, 1.0)		

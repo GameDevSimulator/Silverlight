@@ -58,10 +58,11 @@ namespace Assets.Scripts.Gameplay
 
         private Rigidbody _rigidBody;
         private CapsuleCollider _capsule;
-        private DarknessInteractor _interactor;
         private bool _running;
         private bool _previouslyGrounded;
         private bool _isGrounded;
+        private bool _isOnDarkness;
+        private Vector3 _darknessNormal;
         private bool _jumping;
         private bool _jump;
         private Vector3 _groundContactNormal;
@@ -75,12 +76,11 @@ namespace Assets.Scripts.Gameplay
         {
             _rigidBody = GetComponent<Rigidbody>();
             _capsule = GetComponent<CapsuleCollider>();
-            _interactor = GetComponent<DarknessInteractor>();
         }
 
         void Update()
         {
-            if (AcceptInput && Input.GetButtonDown("Jump") && !_jump)
+            if (AcceptInput && Input.GetButtonDown(WellKnown.Buttons.Jump) && !_jump)
             {
                 _jump = true;
             }
@@ -96,8 +96,8 @@ namespace Assets.Scripts.Gameplay
             var input = new Vector2();
             if (AcceptInput)
             {
-                input.x = Input.GetAxis("Horizontal");
-                input.y = Input.GetAxis("Vertical");
+                input.x = Input.GetAxis(WellKnown.Axis.Horizontal);
+                input.y = Input.GetAxis(WellKnown.Axis.Vertical);
             }
 
             GroundCheck();
@@ -113,11 +113,6 @@ namespace Assets.Scripts.Gameplay
 
                 if (!_isGrounded)
                     desiredMove *= AirControlModifier;
-
-                if(desiredMove.x < 0)
-                    desiredMove *= (1f - Mathf.Clamp01((1f - DarknessControlModifier) * LeftSampleState()));
-                else
-                    desiredMove *= (1f - Mathf.Clamp01((1f - DarknessControlModifier) * RightSampleState()));
 
                 desiredMove.x = desiredMove.x * CurrentTargetSpeed;
                 desiredMove.z = desiredMove.z * CurrentTargetSpeed;
@@ -138,7 +133,7 @@ namespace Assets.Scripts.Gameplay
                     _rigidBody.drag = 0f;
                     _rigidBody.velocity = Vector3.ProjectOnPlane(_rigidBody.velocity, transform.up);
                     //new Vector3(_rigidBody.velocity.x, 0f, _rigidBody.velocity.z);
-                    _rigidBody.AddForce(transform.up * JumpForce * (1f - Mathf.Clamp01((1f - DarknessJumpModifier) * GroundSampleState())), ForceMode.Impulse);
+                    _rigidBody.AddForce(transform.up * JumpForce, ForceMode.Impulse);
                     _jumping = true;
                     SendMessage("OnJump", SendMessageOptions.DontRequireReceiver);
                 }
@@ -197,22 +192,25 @@ namespace Assets.Scripts.Gameplay
             var worldRadius = transform.lossyScale.x * _capsule.radius;
             var worldHeight = transform.lossyScale.x * _capsule.height;
             RaycastHit hitInfo;
-            if (Physics.SphereCast(_capsule.bounds.center, worldRadius * (1.0f - ShellOffset), -transform.up, out hitInfo,
-                                   ((worldHeight * 0.5f) - worldRadius) + GroundCheckDistance, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+            if (Physics.SphereCast(_capsule.bounds.center, worldRadius*(1.0f - ShellOffset), -transform.up, out hitInfo,
+                ((worldHeight*0.5f) - worldRadius) + GroundCheckDistance, Physics.AllLayers,
+                QueryTriggerInteraction.Ignore))
             {
                 _isGrounded = true;
                 _groundContactNormal = hitInfo.normal;
             }
             else
             {
-                _isGrounded = false;
-                _groundContactNormal = transform.up;
-            }
-
-            if (GroundSampleState() > 0.5f)
-            {
-                _isGrounded = true;
-                _groundContactNormal = transform.up;
+                if (_isOnDarkness)
+                {
+                    _isGrounded = true;
+                    _groundContactNormal = _darknessNormal;
+                }
+                else
+                {
+                    _isGrounded = false;
+                    _groundContactNormal = transform.up;
+                }
             }
 
             if (!_previouslyGrounded && _isGrounded && _jumping)
@@ -220,6 +218,20 @@ namespace Assets.Scripts.Gameplay
                 _jumping = false;
                 SendMessage("OnLand", SendMessageOptions.DontRequireReceiver);
             }
+        }
+
+        void OnCollisionWithDarkness(DarknessArea.DarknessCollision collision)
+        {
+            if (collision.Contact.y - (_capsule.bounds.center.y - transform.lossyScale.x * _capsule.height) < _capsule.radius)
+            {
+                _isOnDarkness = true;
+                _darknessNormal = collision.Normal;
+            }
+        }
+
+        void OnCollisionWithDarknessExit()
+        {
+            _isOnDarkness = false;
         }
 
         private void StickToGroundHelper()
@@ -240,21 +252,6 @@ namespace Assets.Scripts.Gameplay
         {
             var angle = Vector3.Angle(_groundContactNormal, transform.up);
             return SlopeCurveModifier.Evaluate(angle);
-        }
-
-        private float GroundSampleState()
-        {
-            return _interactor.Samples[GroundSample].LastState;
-        }
-
-        private float LeftSampleState()
-        {
-            return _interactor.Samples[LeftSample].LastState;
-        }
-
-        private float RightSampleState()
-        {
-            return _interactor.Samples[RightSample].LastState;
         }
     }
 }

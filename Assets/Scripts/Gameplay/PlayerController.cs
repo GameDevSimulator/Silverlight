@@ -2,10 +2,11 @@
 
 namespace Assets.Scripts.Gameplay
 {
-    [RequireComponent(typeof(CharacterMovement))]
+    [RequireComponent(typeof(PhysicsCharacterController))]
     public class PlayerController : MonoBehaviour
     {
-        private CharacterMovement _movement;
+        public FlashLight FlashLight { get; private set; }
+        private PhysicsCharacterController _movement;
 
         void Awake()
         {
@@ -14,20 +15,21 @@ namespace Assets.Scripts.Gameplay
 
         void Start()
         {
-            _movement = GetComponent<CharacterMovement>();
+            _movement = GetComponent<PhysicsCharacterController>();
+            FlashLight = GetComponentInChildren<FlashLight>();
         }
 
         void Update()
         {
             if (GameManager.Instance.CurrentControllableCharacter == WellKnown.Character.Boy)
             {
-                if (!_movement.IsControllable)
-                    _movement.Activate();
+                if (!_movement.AcceptInput)
+                    _movement.AcceptInput = true;
             }
             else
             {
-                if (_movement.IsControllable)
-                    _movement.Deactivate();
+                if (_movement.AcceptInput)
+                    _movement.AcceptInput = false;
             }
         }
 

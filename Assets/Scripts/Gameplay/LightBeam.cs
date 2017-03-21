@@ -221,7 +221,7 @@ namespace Assets.Scripts.Gameplay
                 return result;
 
             RaycastHit hit;
-            if (Physics.Raycast(new Ray(origin, direction), out hit, maxDistance))
+            if (Physics.Raycast(new Ray(origin, direction), out hit, maxDistance, LayerMask.GetMask("Default")))
             {
                 result.Point = hit.point;
                 result.Collided = true;

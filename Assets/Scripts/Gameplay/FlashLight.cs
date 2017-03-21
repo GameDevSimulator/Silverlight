@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using Assets.Scripts;
+using Assets.Scripts.Gameplay.Darkness;
 using UnityEngine;
 
 public class FlashLight : MonoBehaviour
@@ -24,7 +26,6 @@ public class FlashLight : MonoBehaviour
         var mouseLook = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
         if (mouseLook.magnitude > 0.1f)
         {
-
             float distance;
             
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -54,6 +55,16 @@ public class FlashLight : MonoBehaviour
                 transform.localPosition = _initialPoint + q * Vector3.right * Radius;
                 transform.rotation = q;
             }
+        }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            var go = (GameObject)GameObject.Instantiate(gameObject, transform.position, transform.rotation);
+            go.GetComponent<FlashLight>().enabled = false;
+            go.layer = LayerMask.NameToLayer("Invisible");
+            var interactor = go.GetComponent<DarknessInteractor>();
+            interactor.enabled = true;
+            DestroyObject(go, 3f);
         }
     }
 #if DEBUG

@@ -1,4 +1,4 @@
-﻿Shader "Custom/DarknessVisual" {
+﻿Shader "Obsolete/DarknessVisual" {
 	Properties {
 		_MainTex("Main tex", 2D) = "white"{}
 		_RimColor("Rim Color", Color) = (0.26,0.19,0.16,0.0)		
