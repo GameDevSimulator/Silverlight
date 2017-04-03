@@ -6,6 +6,7 @@ struct Sample
 {	
 	float2 at;
 	float value;
+	float normal;
 };
 
 Texture2D<float4> StateTex;
@@ -25,5 +26,7 @@ void CSSampling (uint3 id : SV_DispatchThreadID)
 	float2 at = SampleBuffer[id.x].at;	
 
 	//SampleBuffer[id.x].value = StateTex[uint2(at.x, at.y)].r;	
-	SampleBuffer[id.x].value = StateTex.SampleLevel(samplerStateTex, at, 0).r;	
+	float3 sample = StateTex.SampleLevel(samplerStateTex, at, 0);
+	SampleBuffer[id.x].value = sample.r;	
+	SampleBuffer[id.x].normal= sample.b;
 }

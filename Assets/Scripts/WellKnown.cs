@@ -2,6 +2,20 @@
 {
     public class WellKnown
     {
+        public class LayerNames
+        {
+            // UNITY
+            public static string Default = "Default";
+            public static string TransparentFx = "TransparentFX";
+            public static string IgnoreRaycast = "Ignore Raycast";
+            public static string Water = "Water";
+            public static string UI = "UI";
+
+            public static string Darkness = "Darkness";
+            public static string DrawableDarkness = "DrawableDarkness";
+            public static string Invisible = "Invisible";
+        }
+
         public class Tags
         {
             public static string Player = "Player";

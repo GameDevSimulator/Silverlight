@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using Random = UnityEngine.Random;
+﻿using UnityEngine;
 
 namespace Assets.Scripts.Gameplay.Darkness
 {
+    [RequireComponent(typeof(Renderer))]
     public class DarknessInteractor : MonoBehaviour
     {
+        public static int PhysicsId = 0;
+
         public enum InteractionType
         {
-            None,
+            PhysicsOnly,
             Light,
-            Dark,
+            DarknessMask,
         }
 
         public enum ProcessingMode
@@ -21,123 +21,212 @@ namespace Assets.Scripts.Gameplay.Darkness
             MeshWithMask,
         }
 
+        public Material InteractionMaterial { get { return _material; } }
+        public Renderer Renderer { get { return _renderer; } }
+        public int BodyId { get; private set; }
+
         public InteractionType Interaction;
-        public ProcessingMode Mode;
-        public DarknessSample[] Samples;
-        public Texture2D Mask;
-        public Material Material;
+
+        public Texture Mask;
+        
+
+        [Space]
+        [Range(0f, 10f)]
+        public float Depenetration = 1f;
+
+        [Range(0f, 1f)]
+        public float Restitution = 0f;
+
+        [Range(0f, 1f)]
+        public float DynamicFriction = 0.5f;
+
+        [Range(0f, 1f)]
+        public float StaticFriction = 0.5f;
 
 
-        [Range(0f, 2f)] public float Outline = 0f;
+        private Rigidbody _body;
+        private MeshRenderer _renderer;
+        private Material _material;
 
-        private MeshFilter _meshFilter;
-        private Rigidbody _rigidbody;
-        private Material _materialInstance;
+        
+        public const string ShaderName = "Darkness/Interactor";
 
         void Start()
         {
-            _rigidbody = GetComponent<Rigidbody>();
+            _body = GetComponent<Rigidbody>();
+            _renderer = GetComponent<MeshRenderer>();
+            _material = new Material(Shader.Find(ShaderName));
 
-            _meshFilter = GetComponent<MeshFilter>();
-            if (_meshFilter == null)
-                Interaction = InteractionType.None;
+            //_renderer.material.SetTexture("_MaskTex", Mask);
 
-            if (_materialInstance == null && Material != null)
+            // _DarknessColor.r - daRkness state
+            // _DarknessColor.g - liGht
+            // _DarknessColor.b - oBject id
+            // _DarknessColor.a - darkness mAsk
+
+            const string key = "_Color";
+
+            switch (Interaction)
             {
-                _materialInstance = Instantiate(Material);
-                _materialInstance.SetFloat("_Outline", Outline);
-
-                if (Mask != null)
+                case InteractionType.PhysicsOnly:
                 {
-                    _materialInstance.SetTexture("_MaskTex", Mask);
-                }
-            }
-        }
+                    BodyId = (DarknessInteractor.PhysicsId + 1) % 256;
+                    DarknessInteractor.PhysicsId = BodyId;
 
-        public Mesh GetMesh()
-        {
-            return _meshFilter.sharedMesh;
+                    _material.SetColor(key, new Color(0, 0, BodyId / 256f, 0));
+                    break;
+                }
+                case InteractionType.DarknessMask:
+                    _material.SetColor(key, new Color(0, 0, 0, 1));
+                    break;
+                case InteractionType.Light:
+                    _material.SetColor(key, new Color(0, 1, 0, 0));
+                    break;
+            }
+
+            if (Mask != null)
+                _material.SetTexture("_Mask", Mask);
         }
 
         public Rigidbody GetRigidbody()
         {
-            return _rigidbody;
+            if(Interaction == InteractionType.PhysicsOnly)
+                return _body;
+            return null;
         }
 
-        void OnDrawGizmosSelected()
+        void OnCollisionWithDarkness(DarknessArea.DarknessCollision collision)
         {
-            var meshFilter = GetComponent<MeshFilter>();
-            if(meshFilter != null && Outline > 0.1f)
-                Gizmos.DrawWireMesh(meshFilter.sharedMesh, transform.position, transform.rotation, transform.localScale * (1.0f + Outline));
+            if (_body == null)
+                return;
 
-            if (Samples != null && Samples.Length > 0)
+            if(collision.IntersectedArea < 3)
+                return;
+
+            if (collision.IntersectedFactor > 0.7)
             {
-                foreach (var sample in Samples)
-                {
-                    Gizmos.DrawWireCube(transform.TransformPoint(sample.LocalPosition), Vector3.one*0.1f);
-                    Gizmos.DrawRay(transform.TransformPoint(sample.LocalPosition),
-                        transform.TransformDirection(sample.Direction));
-                }
+                _body.isKinematic = true;
+                return;
+            }
+            else
+            {
+                _body.isKinematic = false;
+            }
+
+            var intersectedMassFactor = 1f;
+            if(collision.EdgeArea > 0)
+                intersectedMassFactor = collision.IntersectedArea / (float)collision.EdgeArea;
+
+            var v = _body.GetPointVelocity(collision.Contact);
+            var r = collision.Contact - _body.worldCenterOfMass;
+            var n = collision.Normal;
+
+            // LINEAR MODEL
+            //var jLinear = Mathf.Max(-(1 + e) * Vector3.Dot(_body.velocity * _body.mass, n), 0);
+            //_body.AddForce(jLinear * n, ForceMode.Impulse);
+            //continue;
+
+
+            //var a2 = MultiplyComponents(Iwi, a1);
+
+            var inertiatensor3 = _body.inertiaTensorRotation * _body.inertiaTensor;
+            var inverseBodyTensor = new Matrix4x4
+            {
+                m00 = 1f / 1f,
+                m11 = 1f / 1f,
+                m22 = 1f / inertiatensor3.z,
+                m33 = 1.0f
+            };
+
+            var rotation = new Matrix4x4();
+            rotation.SetTRS(Vector3.zero, _body.rotation, Vector3.one);
+
+            var inverseInertiaTensorWorld = rotation * inverseBodyTensor * rotation.transpose;
+            // parallel axis theorem
+            var inverseInertiaTensorWithOffset = new Matrix4x4
+            {
+                m00 = inverseInertiaTensorWorld.m00,
+                m01 = inverseInertiaTensorWorld.m01 - r.x * r.y * _body.mass,
+                m02 = inverseInertiaTensorWorld.m02 - r.x * r.z * _body.mass,
+
+                m10 = inverseInertiaTensorWorld.m10 - r.y * r.x * _body.mass,
+                m11 = inverseInertiaTensorWorld.m11,
+                m12 = inverseInertiaTensorWorld.m12 - r.y * r.z * _body.mass,
+
+                m20 = inverseInertiaTensorWorld.m20 - r.z * r.x * _body.mass,
+                m21 = inverseInertiaTensorWorld.m21 - r.z * r.y * _body.mass,
+                m22 = inverseInertiaTensorWorld.m22,
+                m33 = 1f
+            };
+
+            //print(inverseInertiaTensorWithOffset);
+
+            //var iIz = (_body.rotation*_body.inertiaTensorRotation*_body.inertiaTensor).z;
+            //var iIz = (_body.rotation*_body.inertiaTensorRotation*_body.inertiaTensor).z + _body.mass * transform.InverseTransformVector(r).sqrMagnitude;
+            //var iIz = (_body.inertiaTensorRotation * _body.inertiaTensor).z - _body.mass * r.sqrMagnitude;
+            //var iIz = InverseComponents(_body.inertiaTensorRotation*_body.inertiaTensor);
+            var iIz = r.sqrMagnitude * _body.mass;
+            var a2 = Vector3.Cross(r, n) / iIz;
+
+            //var a2 = inverseInertiaTensorWithOffset.MultiplyPoint(Vector3.Cross(r, n));
+            //var a2 = inverseInertiaTensorWorld.MultiplyPoint(Vector3.Cross(r, n));
+            //var a2 = MultiplyByInverseInertiaTensorAt(_body, contact, Vector3.Cross(r, n));
+
+            //Debug.DrawRay(contact, a2 * 5, Color.blue);
+
+            var a4 = Vector3.Dot(Vector3.Cross(a2, r), n);
+
+
+            // PENETRATION CORRECTION
+            //_body.transform.Translate(transform.TransformVector(-col.GetPenetrationNormal().normalized * col.GetPenetrationDepth()), Space.World);
+            //_body.transform.Translate(n * intersectedMassFactor * Time.fixedDeltaTime * 100f, Space.World);
+
+            if (collision.EdgeArea > 0)
+                _body.transform.Translate(n * (Depenetration * intersectedMassFactor / 512f), Space.World);
+
+            // reaction impulse magnitude
+            var jr = Mathf.Max((-(1 + Restitution) * Vector3.Dot(v, n)) / (1f / _body.mass + a4), 0);
+            _body.AddForceAtPosition(jr * n, collision.Contact, ForceMode.Impulse);
+
+            // update particle velocity at contact
+            //v = v + jr * n / _body.mass;
+
+
+            // DYNAMIC FRICTION
+            // tangent (based on velocity direction)
+            var t = (v - Vector3.Dot(v, n) * n).normalized;
+
+            // dynamic friction impulse magnitude
+            var jd = DynamicFriction * jr;
+
+            // static friction 
+            var js = StaticFriction * jr;
+
+
+            var dot = Vector3.Dot(_body.mass * v, t);
+            if (Mathf.Abs(Vector3.Dot(v, t)) < Mathf.Epsilon && dot <= js)
+            {
+                // static friction impulse
+                var jf = -dot * t;
+                _body.AddForceAtPosition(jf, collision.Contact, ForceMode.Impulse);
+                Debug.DrawRay(collision.Contact, jf, Color.red, 1f);
+            }
+            else
+            {
+                // dynamic friction impulse
+                var jf = -jd * t;
+
+                _body.AddForceAtPosition(jf, collision.Contact, ForceMode.Impulse);
+                Debug.DrawRay(collision.Contact, jf, Color.cyan);
             }
         }
 
-        public void DrawMesh(Transform darknessTransform)
+        void OnCollisionWithDarknessExit()
         {
-            if (_materialInstance != null && _meshFilter != null && Interaction != InteractionType.None)
-            {
-                var mesh = _meshFilter.sharedMesh;
-                _materialInstance.SetPass(0);
-                
-                var dknShift = Matrix4x4.TRS(new Vector3(0.5f, 0.5f, 0.1f), Quaternion.identity, Vector3.one);
-                var t = dknShift * darknessTransform.worldToLocalMatrix * transform.localToWorldMatrix;
+            if (_body == null)
+                return;
 
-                GL.Begin(GL.TRIANGLES);
-                switch (Mode)
-                {
-                    case ProcessingMode.MeshOnly:
-                        foreach (var index in mesh.triangles)
-                        {
-                            if (Mode == ProcessingMode.MeshWithMask)
-                                GL.TexCoord(mesh.uv[index]);
-                            if (Mode == ProcessingMode.MeshWithColorData && mesh.colors.Length > 0)
-                                GL.Color(mesh.colors32[index]);
-                            var v = t.MultiplyPoint3x4(mesh.vertices[index]);
-                            GL.Vertex3(v.x, v.y, v.z);
-                        }
-                        break;
-                    case ProcessingMode.MeshWithColorData:
-                        if (mesh.colors32.Length == 0)
-                            break;
-                        foreach (var index in mesh.triangles)
-                        {
-                            GL.Color(mesh.colors32[index]);
-                            var v = t.MultiplyPoint3x4(mesh.vertices[index]);
-                            GL.Vertex3(v.x, v.y, v.z);
-                        }
-                        break;
-                    case ProcessingMode.MeshWithMask:
-                        foreach (var index in mesh.triangles)
-                        {
-                            GL.TexCoord(mesh.uv[index]);
-                            var v = t.MultiplyPoint3x4(mesh.vertices[index]);
-                            GL.Vertex3(v.x, v.y, v.z);
-                        }
-                        break;
-                }
-                GL.End();
-            }
+            _body.isKinematic = false;
         }
-    }
-
-    [Serializable]
-    public struct DarknessSample
-    {
-        public Vector3 LocalPosition;
-        public Vector3 Direction;
-
-        [Range(0f, 1f)]
-        public float MassPart;
-
-        [HideInInspector] public float LastState;
     }
 }

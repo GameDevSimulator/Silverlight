@@ -1,4 +1,4 @@
-﻿Shader "Custom/DarknessVisual2" {
+﻿Shader "Obsolete/DarknessVisual2" {
 	Properties {
 		_StateTex("Darkness state", 2D) = "white" {}
 		_Noise("Noise (4 channels)", 2D) = "white" {}

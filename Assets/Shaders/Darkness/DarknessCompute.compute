@@ -1,0 +1,79 @@
+﻿#pragma kernel CSCollision
+
+SamplerState samplerStateTex
+{
+    Filter   = MIN_MAG_MIP_LINEAR;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
+
+struct ObjectCollisionInfo
+{		
+	uint intersectionXSum;
+	uint intersectionYSum;
+	uint intersectionNormalXSum;
+	uint intersectionNormalYSum;
+	uint countIntersection;	
+	uint countEdge;	
+	uint countAll;
+};
+
+RWTexture2D<half4> StateTex; 
+RWStructuredBuffer<ObjectCollisionInfo> CollisionInfoBuffer; 
+
+#define LIGHT_SPEED 0.1
+#define DARKNESS_SPEED 0.01
+#define DARKNESS_SPEED_NEIGHBOR 0.05
+#define DARKNESS_THRESHOLD 0.8
+
+#define NORMAL_SCALE 256.0  
+
+#define THRESHOLD(X) (sign(max(0, (X) - 0.5)))
+#define ITHRESHOLD(X) (THRESHOLD(1 - (X))) 
+#define DECAY(X) (1 / (100 * (X) + 1))
+#define RELU(X) (max(0, 2 * (X) - 1))
+#define DX(I) (StateTex[id.xy + uint2((I), 0)].r)	
+#define DY(I) (StateTex[id.xy + uint2(0, (I))].r)	
+#define TDX(I) (exp(DX(I)) - 1)
+#define TDY(I) (exp(DX(I)) - 1)
+
+[numthreads(8,8,1)]
+void CSCollision(uint3 id : SV_DispatchThreadID)
+{
+	half4 state = StateTex[id.xy];
+	float nei = 0.25 * (TDX(-1) + TDX(1) + TDY(-1) + TDY(1));	
+	float r = state.r;
+
+	// SLOW
+	float dr = DECAY(r) * DARKNESS_SPEED + nei * DARKNESS_SPEED_NEIGHBOR;
+	state.r = (clamp(state.r + dr, 0, 1) - state.g * LIGHT_SPEED) * state.a;	
+
+	// INSTANT
+	//state.r = state.a - state.g;
+
+	// Clear all but R (daRkness)
+	StateTex[id.xy] = float4(state.r, 0, 0, 0);  
+
+	uint objectId = uint(state.b * 256.0);
+	
+	half2 normal = half2(
+		0.2 * DX(-2) + 0.8 * DX(-1) - 0.8 * DX(1) - 0.2 * DX(2),
+		0.2 * DY(-2) + 0.8 * DY(-1) - 0.8 * DY(1) - 0.2 * DY(2));	
+	
+	int isObject = sign(objectId);
+	
+	uint isRigidDarkness = sign(max(state.r - DARKNESS_THRESHOLD, 0));
+	uint isEdge = max(0, sign(abs(length(normal)) - 0.2)) * isRigidDarkness;
+	uint isIntersection = sign(isEdge + isRigidDarkness);	
+	
+	normal.x = normal.x * 0.5 + 0.5;
+	normal.y = normal.y * 0.5 + 0.5;
+
+	InterlockedAdd(CollisionInfoBuffer[objectId].countIntersection, isIntersection);	
+	InterlockedAdd(CollisionInfoBuffer[objectId].countEdge, isEdge);
+	InterlockedAdd(CollisionInfoBuffer[objectId].countAll, isObject);
+	InterlockedAdd(CollisionInfoBuffer[objectId].intersectionXSum, uint(id.x) * isIntersection);
+	InterlockedAdd(CollisionInfoBuffer[objectId].intersectionYSum, uint(id.y) * isIntersection);
+	InterlockedAdd(CollisionInfoBuffer[objectId].intersectionNormalXSum, uint(normal.x * NORMAL_SCALE) * isIntersection);	
+	InterlockedAdd(CollisionInfoBuffer[objectId].intersectionNormalYSum, uint(normal.y * NORMAL_SCALE) * isIntersection);
+}

@@ -1,4 +1,4 @@
-﻿Shader "Example/Rim" {
+﻿Shader "Custom/Rim" {
 	Properties{
 		_MainTex("Texture", 2D) = "white" {}
 		_BumpMap("Bumpmap", 2D) = "bump" {}

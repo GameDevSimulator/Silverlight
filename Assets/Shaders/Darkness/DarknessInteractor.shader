@@ -1,8 +1,7 @@
-﻿Shader "Custom/DarknessInteractor" {
-	Properties {
-		_StateColor ("State Color", Color) = (1,0,0,0)
-		_MaskTex ("Mask", 2D) = "white" {}		
-		_Outline("Outline", Range(0, 2.0)) = 0.0
+﻿Shader "Darkness/Interactor" {
+	Properties {		
+		_Color("Color", Color) = (0,0,0,0)
+		_Mask("Texture", 2D) = "white" {}
 	}
 	SubShader {
 		Tags{ "RenderType" = "Opaque" "IgnoreProjector" = "True" }
@@ -10,24 +9,32 @@
 
 		Pass
 		{
-			Tags { "Queue" = "Opaque" }
+			Tags{ "Queue" = "Opaque" }
+			Cull Back
 			Lighting Off
+			ZTest LEqual			
+			ZWrite On
+			ColorMask RGBA			
+			
 
-			Blend One One
-			Fog { Mode off }
+			Blend One One		
+			Fog{ Mode off }
 
 
 			CGPROGRAM
-			// Standart empty vertex function
 			#pragma vertex vert
 			#pragma fragment frag alpha
 
-			#include "UnityCG.cginc"
+			#include "UnityCG.cginc" 
+
+			float4 _Color;
+			sampler2D _Mask;
+			float4x4 _DarknessAreaTransform;
 
 			struct appdata
 			{
-				float4 vertex : POSITION;
-				half2 uv_MaskTex : TEXCOORD0;
+				float4 vertex : POSITION;								
+				half2 uv_Mask : TEXCOORD0;
 				fixed4 color : COLOR;
 			};
 
@@ -35,35 +42,28 @@
 			{
 				float4 vertex : SV_POSITION;
 				half2 uv : TEXCOORD0;
-				fixed4 color : COLOR;
+				fixed4 color : COLOR;				
 			};
-
-			uniform float _Outline;
-			uniform float4 _StateColor;
-			uniform sampler2D _MaskTex;
 
 			v2f vert(appdata v)
 			{
 				v2f o;
-				o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
-
-				//float3 norm = mul((float3x3)UNITY_MATRIX_IT_MV, v.normal);
-				//float2 offset = TransformViewToProjection(norm.xy);
-
-				o.vertex *= 1 + _Outline;
+				o.vertex = mul(_DarknessAreaTransform, mul(unity_ObjectToWorld, v.vertex));
+				o.uv = v.uv_Mask;
 				o.color = v.color;
-				o.uv = v.uv_MaskTex;
-				return o;
+				return o; 
 			}
 
 			float4 frag(v2f i) : COLOR
-			{
-				float mask = tex2D(_MaskTex, i.uv).r * i.color.r;
-				//float4 c = _StateColor * sqrt(i.color.r) * mask;
-				float4 c = _StateColor * sqrt(mask);
-				return float4(c.r, c.g, c.b, 1);				
+			{ 
+				fixed mask = tex2D(_Mask, i.uv).r;
+				return fixed4(
+					_Color.r * mask, 
+					_Color.g * mask, 
+					_Color.b, 
+					_Color.a * mask);
 			}
 			ENDCG
-		}		
+		}
 	}
 }

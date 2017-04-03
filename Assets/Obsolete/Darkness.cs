@@ -48,6 +48,7 @@ namespace Assets.Scripts.Gameplay.Darkness
         {
             public Vector2 At;
             public float Value;
+            public float Normal;
         }
         private bool _useComputeSampling; // Shader model 5.0 support (DX11)
         private const string ComputeShaderSamplingKernel = "CSSampling"; // Name of the kernel in CS
@@ -137,45 +138,14 @@ namespace Assets.Scripts.Gameplay.Darkness
                     var forceFactorSum = 0f;
                     var idx = 0;
                     
-                    foreach (var sample in interactor.Samples)
-                    {
-                        if (_useComputeSampling)
-                            QueueSample(interactorSampleId + idx, interactor.transform.TransformPoint(sample.LocalPosition));
-
-                        forceFactorSum += CalcForceFactor(
-                            interactorSampleId + idx,
-                            interactor.transform.TransformPoint(sample.LocalPosition),
-                            interactor.transform.TransformDirection(-sample.Direction.normalized),
-                            Vector3.up);
-
-                        idx++;
-                    }
+                   
                     
                     forceFactorSum = Mathf.Max(forceFactorSum, 1f);
 
                     if (forceFactorSum > 0)
                     {
                         idx = 0;
-                        for (var i = 0; i < interactor.Samples.Length; i++)
-                        {
-                            var sample = interactor.Samples[i];
-                            var factor = CalcForceFactor(
-                                interactorSampleId + idx,
-                                interactor.transform.TransformPoint(sample.LocalPosition),
-                                interactor.transform.TransformDirection(-sample.Direction.normalized),
-                                Vector3.up);
-
-                            var state = SamplePhysicsAt
-                                (interactorSampleId + idx,
-                                interactor.transform.TransformPoint(sample.LocalPosition), 
-                                body,
-                                factor / forceFactorSum,
-                                1f / interactor.Samples.Length
-                            );
-
-                            idx++;
-                            interactor.Samples[i].LastState = state;
-                        }
+                       
                         
                         // Slow dow rotation
                         body.angularVelocity *= AngularDamping;
@@ -219,8 +189,9 @@ namespace Assets.Scripts.Gameplay.Darkness
         
             GL.End();
         
+            /*
             foreach (var interactor in _interactors)
-                interactor.DrawMesh(transform);
+                interactor.DrawMesh(transform);*/
             GL.PopMatrix();
         }
 
@@ -267,7 +238,9 @@ namespace Assets.Scripts.Gameplay.Darkness
 
         private float CalcForceFactor(int sampleId, Vector3 at, Vector3 objectSurfaceNormal, Vector3 forceDirection)
         {
-            return Mathf.Max(Vector3.Dot(forceDirection, objectSurfaceNormal), 0) * GetState(at, sampleId);
+            //return Mathf.Max(Vector3.Dot(forceDirection, objectSurfaceNormal), 0) * GetState(at, sampleId);
+            var normal = DequeueNormal(sampleId);
+            return Mathf.Max(Vector3.Dot(forceDirection, new Vector3(normal, 1, 0).normalized), 0) * GetState(at, sampleId);
         }
 
         private float SamplePhysicsAt(int sampleId, Vector3 sample, Rigidbody body, float gravityFactor, float frictionFactor)
@@ -329,6 +302,13 @@ namespace Assets.Scripts.Gameplay.Darkness
             if (id > ComputeShaderSamplingBufferSize - 1)
                 return 0;
             return _gpuSamplesOut[id].Value;
+        }
+
+        private float DequeueNormal(int id)
+        {
+            if (id > ComputeShaderSamplingBufferSize - 1)
+                return 0;
+            return _gpuSamplesOut[id].Normal;
         }
 
         public bool OnBeamRayHit(RaycastHit hit, Vector3 rdir, float maxDistance, out Vector3 endPoint)

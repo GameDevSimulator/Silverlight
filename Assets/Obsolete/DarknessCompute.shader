@@ -1,4 +1,4 @@
-﻿Shader "Custom/DarknessCompute"
+﻿Shader "Obsolete/DarknessCompute"
 {
 	Properties{
 		_MainTex("Darkness State (RGB)", 2D) = "white" {}
@@ -30,6 +30,8 @@
 			uniform float _LightenSpeed;
 			uniform float _Decay;
 
+			#define dx(DX) (tex2D(_MainTex, i.uv + float2(DX, 0)).r)
+
 			float4 frag(v2f_img i) : COLOR {
 				float4 mask = tex2D(_MaskTex, i.uv);
 				float4 state = tex2D(_MainTex, i.uv);
@@ -48,9 +50,16 @@
 				//float m = min(mask.r, 1.0);
 				float delta = sum.r * 0.25 * _DarkenSpeed * mask.r - sum.g * 0.25 * _LightenSpeed;
 				state.r += delta;
-				state.r = min(state.r, mask.r);			
-				state.b += state.r * 0.05;
-				state.b -= _Decay;
+				state.r = min(state.r, mask.r);
+				// R - DARKNESS (0.0 no darkness, 1.0 - darkness)
+				// G - LIGHT (0.0 - no light, 1.0 - light)
+				// B - NORMAL (0.0 - normal points left, 1.0 - normal points right)
+
+				float normal = (-dx(-0.01) - dx(-0.005) + dx(0.005) + dx(0.01)) * 0.25 + 0.5;
+				state.b = normal;				
+
+				//state.b += state.r * 0.05;
+				//state.b -= _Decay;
 				return state;
 			}
 			ENDCG
