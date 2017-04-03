@@ -27,14 +27,17 @@ public class GameManager : Singleton<GameManager>
 
     public void SwitchCharacter()
     {
-        switch (CurrentControllableCharacter)
+        if (!Cat._inBag)
         {
-            case WellKnown.Character.Boy:
-                CurrentControllableCharacter = WellKnown.Character.Cat;
-                break;
-            case WellKnown.Character.Cat:
-                CurrentControllableCharacter = WellKnown.Character.Boy;
-                break;
+            switch (CurrentControllableCharacter)
+            {
+                case WellKnown.Character.Boy:
+                    CurrentControllableCharacter = WellKnown.Character.Cat;
+                    break;
+                case WellKnown.Character.Cat:
+                    CurrentControllableCharacter = WellKnown.Character.Boy;
+                    break;
+            }
         }
     }
 

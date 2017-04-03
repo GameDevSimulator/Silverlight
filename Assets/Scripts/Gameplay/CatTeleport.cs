@@ -5,11 +5,16 @@ namespace Assets.Scripts.Gameplay
     [RequireComponent(typeof(Collider))]
     public class CatTeleport : MonoBehaviour
     {
+        enum TeleportState
+        {
+            Inactive, Activated, Teleported
+        }
         public GameObject Target;
-
-        string _message;
-        bool _inTrigger;
-        GameObject _currentIbject;
+        private string _message;
+        private bool _inTrigger;
+        private TeleportState _state=TeleportState.Inactive;
+        private GameObject _currentObject;
+        private float z0;
 
         void Start()
         {
@@ -18,10 +23,42 @@ namespace Assets.Scripts.Gameplay
         void Update()
         {
             if (Input.GetButtonDown(WellKnown.Buttons.Activate) && _inTrigger && GameManager.Instance.CurrentControllableCharacter == WellKnown.Character.Cat)
-            { 
-                //       Cat.transform.position = new Vector3(Target.transform.position.x, Target.transform.position.y, Cat.transform.position.z);
-                _currentIbject.transform.position = new Vector3(Target.transform.position.x, Target.transform.position.y, _currentIbject.transform.position.z);
+            {
+                _currentObject.transform.Rotate(0, -90, 0);
+                _state = TeleportState.Activated;
+                z0 = _currentObject.transform.position.z;               
+                //       Cat.transform.position = new Vector3(Target.transform.position.x, Target.transform.position.y, Cat.transform.position.z);               
             }
+            if (_state== TeleportState.Activated)
+            {
+                if  (_currentObject.transform.position.z < transform.position.z)
+                {
+                    _currentObject.transform.position+= new Vector3(0, 0, (float)0.1);
+                }
+                else
+                {
+                    _currentObject.transform.position= new Vector3(Target.transform.position.x, Target.transform.position.y, _currentObject.transform.position.z);
+                    _state = TeleportState.Teleported;
+                    _currentObject.transform.Rotate(0, 180, 0);
+                }
+
+            }
+            if (_state == TeleportState.Teleported)
+            {
+                if (_currentObject.transform.position.z>z0)
+                {
+                    _currentObject.transform.position -= new Vector3(0, 0, (float)0.1);
+                }
+                else
+                {
+                    _state = TeleportState.Inactive;
+                    _currentObject.transform.Rotate(0, -90, 0);
+                    _currentObject.transform.position = new Vector3(_currentObject.transform.position.x, _currentObject.transform.position.y, z0);
+                    _currentObject = null;
+                }
+
+            }
+            
         }
 
         void OnTriggerEnter(Collider col)
@@ -31,7 +68,7 @@ namespace Assets.Scripts.Gameplay
                 Debug.Log("Trigger entered", this);
                 _message = "Press E to enter hole";
                 _inTrigger = true;
-                _currentIbject = col.gameObject;
+                _currentObject = col.gameObject;
             }
         }
 
@@ -40,12 +77,15 @@ namespace Assets.Scripts.Gameplay
             Debug.Log("Trigger exited", this);
             _message = "";
             _inTrigger = false;
-            _currentIbject = null;
+            if (_state == TeleportState.Inactive)
+            {
+                _currentObject = null;
+            }
         }
 
         void OnGUI()
         {
-            if (GameManager.Instance.CurrentControllableCharacter == WellKnown.Character.Cat) //сделать проверку на то, что камера центрирована относительно персонажа
+            if (GameManager.Instance.CurrentControllableCharacter == WellKnown.Character.Cat) 
             {
                 GUI.Label(new Rect(300, 400, 200, 200), _message);
             }

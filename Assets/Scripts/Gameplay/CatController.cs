@@ -7,6 +7,7 @@ using Assets.Scripts.Gameplay;
 public class CatController : MonoBehaviour
 {
     private PhysicsCharacterController _controller;
+    public bool _inBag;
 
     void Awake()
     {
