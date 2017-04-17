@@ -37,6 +37,7 @@
             public static string Jump = "Jump";
             public static string Switch = "Switch";
             public static string Activate = "Activate";
+            public static string CallCat = "CallCat";
         }
 
         public enum Character
