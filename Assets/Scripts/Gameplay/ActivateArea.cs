@@ -6,6 +6,7 @@ namespace Assets.Scripts.Gameplay
     public class ActivateArea : MonoBehaviour
     {
         public GameObject[] Targets;
+        public string MsgText;
 
         string _message = "";
         bool _inTrigger = false;
@@ -27,9 +28,13 @@ namespace Assets.Scripts.Gameplay
 
         void OnTriggerEnter(Collider col)
         {
-            Debug.Log("Trigger entered", this);
-            _message = "Press E to open";
-            _inTrigger = true;
+            if (col.tag != "Light")
+            {
+                Debug.Log("Trigger entered", this);
+                _message = MsgText;
+                _inTrigger = true;
+            }
+            
         }
 
         void OnTriggerExit(Collider col)
