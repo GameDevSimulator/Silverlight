@@ -10,7 +10,8 @@ namespace Assets.Scripts.Gameplay
 
         void Awake()
         {
-            GameManager.Instance.Player = this;
+            // Selfpropagate to GameManager
+            GameManager.Instance.Boy = this;
         }
 
         void Start()

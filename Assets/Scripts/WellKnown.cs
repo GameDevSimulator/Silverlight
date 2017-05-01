@@ -42,6 +42,7 @@
 
         public enum Character
         {
+            None,
             Boy,
             Cat
         }

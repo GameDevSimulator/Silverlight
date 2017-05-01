@@ -113,7 +113,7 @@ namespace Assets.Scripts.Gameplay.Darkness
             CollisionComputeShader.SetBuffer(_kernel, "CollisionInfoBuffer", _buffer);
 
             
-            var flashlight = GameManager.Instance.Player.FlashLight.GetComponent<DarknessInteractor>();
+            var flashlight = GameManager.Instance.Boy.FlashLight.GetComponent<DarknessInteractor>();
             if (flashlight != null)
             {
                 Debug.LogFormat("Auto added flashlight to darkness: {0}", flashlight);

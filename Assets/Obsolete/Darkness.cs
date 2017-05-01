@@ -98,7 +98,7 @@ namespace Assets.Scripts.Gameplay.Darkness
                 Debug.LogError("Missing sampling compute shader");
 
             // Always track players flashlight
-            var fl = GameManager.Instance.Player.GetComponentInChildren<FlashLight>();
+            var fl = GameManager.Instance.Boy.GetComponentInChildren<FlashLight>();
             _interactors.Add(fl.GetComponent<DarknessInteractor>());
         }
 
