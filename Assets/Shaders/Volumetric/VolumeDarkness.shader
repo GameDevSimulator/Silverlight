@@ -31,19 +31,15 @@
 			float _Density;
 
 	
-			#define DELTA 0.01
+			#define DELTA 0.001
 
 			float darkness(float3 p)
 			{
-				float2 offset = p.xy - _Time.xy * 0.1 + float2(sin(p.y * 5 + _Time.x) * 0.1, 0);
-				float noise = tex2D(_Noise, offset).r + 0.01;
+				float scaleX = length(mul(unity_ObjectToWorld, float4(0.5, 0.0, 0.0, 0.0)));
+				float2 offset = p.xy - _Time.xy * 0.1 / scaleX + float2(sin(p.y * 5  + _Time.x) * 0.1, 0);
+				float noise = tex2D(_Noise, offset * scaleX).r + 0.01;
 
-				float state = 
-					tex2D(_MainTexture, p.xy + 0.5 + half2(DELTA, 0)).r +
-					tex2D(_MainTexture, p.xy + 0.5 + half2(-DELTA, 0)).r +
-					tex2D(_MainTexture, p.xy + 0.5 + half2(0, DELTA)).r +
-					tex2D(_MainTexture, p.xy + 0.5 + half2(0, -DELTA)).r;
-				state = 0.25 * state;
+				float state = tex2D(_MainTexture, p.xy + 0.5).r;					
 				float d = 1 - abs(p.z * 2); 				
 				return 1 - state * 10 * d * noise * noise;
 			}
@@ -55,7 +51,7 @@
 				return _Color * float4(1, 1, 1, opacity);
 			}
 			 
-			#define VOLUME_RAYMARCH_STEPS 16
+			#define VOLUME_RAYMARCH_STEPS 32
 			//#define VOLUME_NO_JITTERING     
 			//#define VOLUME_RAYMARCH_FUNCTION IsosurfaceRaymarch  
 			#define VOLUME_MAP darkness
