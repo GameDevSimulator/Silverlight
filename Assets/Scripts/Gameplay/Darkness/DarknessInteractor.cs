@@ -103,8 +103,9 @@ namespace Assets.Scripts.Gameplay.Darkness
             if(collision.IntersectedArea < 3)
                 return;
 
-            if (collision.IntersectedFactor > 0.7)
+            if (collision.IntersectedFactor > 0.8f)
             {
+                SendMessage("OnStuckInDarkness", SendMessageOptions.DontRequireReceiver);
                 _body.isKinematic = true;
                 return;
             }

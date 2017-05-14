@@ -26,6 +26,17 @@ namespace Assets.Scripts.Gameplay
             {
                 if (!_movement.AcceptInput)
                     _movement.AcceptInput = true;
+
+                UpdateFlashlightDirection();
+
+                if (FlashLight != null)
+                {
+                    if (Input.GetButton(WellKnown.Buttons.Fire))
+                        FlashLight.Charge();
+
+                    if (Input.GetButtonUp(WellKnown.Buttons.Fire))
+                        FlashLight.Release();
+                }
             }
             else
             {
@@ -34,10 +45,25 @@ namespace Assets.Scripts.Gameplay
             }
         }
 
+        void UpdateFlashlightDirection()
+        {
+            // TODO: MOVE FLASHLIGHT ALIGNING LOGIC FROM FLASHLIGHT TO HERE
+        }
+
         void OnTriggerEnter(Collider col)
         {
-            if(col.CompareTag(WellKnown.Tags.Spikes))
-                GameManager.Instance.Respawn();
+            if (col.CompareTag(WellKnown.Tags.Spikes))
+                Death();
+        }
+
+        void OnStuckInDarkness()
+        {
+            Death();
+        }
+
+        void Death()
+        {
+            GameManager.Instance.Respawn();
         }
     }
 }

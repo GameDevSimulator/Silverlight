@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Utility;
+using UnityEngine;
 
 namespace Assets.Scripts.Gameplay
 {
@@ -23,9 +24,15 @@ namespace Assets.Scripts.Gameplay
         public void Respawn()
         {
             CurrentControllableCharacter = WellKnown.Character.Boy;
-            Boy.transform.position = PlayerSpawnPoint.transform.position;
-            Cat.transform.position = СatSpawnPoint.transform.position;
-            Fader.GetComponent<SceneFadeInOut>().EndScene();
+
+            if (PlayerSpawnPoint != null)
+                Boy.transform.position = PlayerSpawnPoint.transform.position;
+
+            if (СatSpawnPoint != null)
+                Cat.transform.position = СatSpawnPoint.transform.position;
+
+            if(Fader != null)
+                Fader.GetComponent<SceneFadeInOut>().EndScene();
         }
 
         public void ActivateBoy()

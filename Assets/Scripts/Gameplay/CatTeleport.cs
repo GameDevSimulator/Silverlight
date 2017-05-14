@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.UI;
+using UnityEngine;
 
 namespace Assets.Scripts.Gameplay
 {
@@ -66,7 +67,7 @@ namespace Assets.Scripts.Gameplay
             if(col.name == "Cat")
             {
                 Debug.Log("Trigger entered", this);
-                _message = "Press E to enter hole";
+                Tooltip.Instance.Show("Press E to enter hole");
                 _inTrigger = true;
                 _currentObject = col.gameObject;
             }
@@ -75,19 +76,11 @@ namespace Assets.Scripts.Gameplay
         void OnTriggerExit(Collider col)
         {
             Debug.Log("Trigger exited", this);
-            _message = "";
+            Tooltip.Instance.Hide();
             _inTrigger = false;
             if (_state == TeleportState.Inactive)
             {
                 _currentObject = null;
-            }
-        }
-
-        void OnGUI()
-        {
-            if (GameManager.Instance.CurrentControllableCharacter == WellKnown.Character.Cat) 
-            {
-                GUI.Label(new Rect(300, 400, 200, 200), _message);
             }
         }
     }

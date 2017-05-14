@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Gameplay
 {
+    [RequireComponent(typeof(MeshFilter))]
     [RequireComponent(typeof(MeshRenderer))]
     public class LightBeam : MonoBehaviour
     {
@@ -13,15 +14,19 @@ namespace Assets.Scripts.Gameplay
             public int EndVertex;
         }
 
-        [SerializeField] public int Rays = 20;
-        [SerializeField] public float Width = 1f;
-        [SerializeField] public float Spread = 0.5f;
-        [SerializeField] public float MaxDistance = 20f;
+        public int Rays = 20;
+        public float Width = 1f;
+        public float Spread = 0.5f;
+        public float MaxDistance = 20f;
+
+        
+        public Color LightColor = new Color(1, 1, 1, 0.8f);
 
         private float _spread;
         private float _initialWidth;
         private int _initialRays;
         private MeshFilter _meshFilter;
+        private MeshRenderer _meshRenderer;
         private float _maxDistance = 20f;
 
         private Vector3[] _vertices;
@@ -31,9 +36,17 @@ namespace Assets.Scripts.Gameplay
         private int[] _tris;
         private List<MeshRay> _meshRays;
 
+        private Color _currentColor;
+        private bool _fadeLight;
+        private float _currentFadeTime;
+        private float _totalFadeTime;
+        private readonly Color _fadeColor = new Color(1,1,1,0);
+
         void Start()
         {
             _meshFilter = GetComponent<MeshFilter>();
+            _meshRenderer = GetComponent<MeshRenderer>();
+            _currentColor = _meshRenderer.material.color;
 
             // Save public variables to private
             // so no-one be able to change this during start
@@ -42,6 +55,25 @@ namespace Assets.Scripts.Gameplay
             _initialRays = Rays;
             _maxDistance = MaxDistance;
             CreateMesh();
+        }
+
+        void Update()
+        {
+            if (_fadeLight && _currentFadeTime > 0f)
+            {
+                _currentFadeTime -= Time.deltaTime;
+                if (_currentFadeTime < 0f)
+                    _fadeLight = false;
+                else
+                {
+                    _meshRenderer.material.color = Color.Lerp(_fadeColor, _currentColor, _currentFadeTime / _totalFadeTime);
+                }
+            }
+            else if (_currentColor != LightColor)
+            {
+                _meshRenderer.material.color = LightColor;
+                _currentColor = LightColor;
+            }
         }
 
         void FixedUpdate()
@@ -270,6 +302,13 @@ namespace Assets.Scripts.Gameplay
 
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(transform.position, transform.right * MaxDistance + transform.position);
+        }
+
+        public void FadeLight(float time)
+        {
+            _totalFadeTime = time;
+            _currentFadeTime = _totalFadeTime;
+            _fadeLight = true;
         }
     }
 }

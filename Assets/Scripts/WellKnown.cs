@@ -38,6 +38,7 @@
             public static string Switch = "Switch";
             public static string Activate = "Activate";
             public static string CallCat = "CallCat";
+            public static string Fire = "Fire";
         }
 
         public enum Character

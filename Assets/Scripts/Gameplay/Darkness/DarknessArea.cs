@@ -50,6 +50,7 @@ namespace Assets.Scripts.Gameplay.Darkness
             public float IntersectedFactor { get { return IntersectedArea/(float) ObjectArea; } }
         }
 
+        public bool ShowDebugState = false;
         public ComputeShader Compute;
 
         public const float PixelsPerUnit = 64;
@@ -268,7 +269,8 @@ namespace Assets.Scripts.Gameplay.Darkness
         void OnGUI()
         {
 #if DEBUG
-            GUI.DrawTexture(_previewRect, _target, ScaleMode.ScaleToFit, false);
+            if(ShowDebugState)
+                GUI.DrawTexture(_previewRect, _target, ScaleMode.ScaleToFit, false);
 #endif
         }
 

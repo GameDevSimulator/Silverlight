@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.UI;
+using UnityEngine;
 
 namespace Assets.Scripts.Gameplay
 {
@@ -8,7 +9,6 @@ namespace Assets.Scripts.Gameplay
         public GameObject[] Targets;
         public string MsgText;
 
-        string _message = "";
         bool _inTrigger = false;
 
         void Start ()
@@ -31,7 +31,7 @@ namespace Assets.Scripts.Gameplay
             if (col.tag != "Light")
             {
                 Debug.Log("Trigger entered", this);
-                _message = MsgText;
+                Tooltip.Instance.Show(MsgText);
                 _inTrigger = true;
             }
             
@@ -40,16 +40,8 @@ namespace Assets.Scripts.Gameplay
         void OnTriggerExit(Collider col)
         {
             Debug.Log("Trigger exited", this);
-            _message = "";
+            Tooltip.Instance.Hide();
             _inTrigger = false;
         }
-
-        void OnGUI()
-        {
-            if (GameManager.Instance.CurrentControllableCharacter == WellKnown.Character.Boy)
-            {
-                GUI.Label(new Rect(300, 300, 200, 200), _message);
-            }
-        }		
     }
 }
